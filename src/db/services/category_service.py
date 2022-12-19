@@ -1,5 +1,6 @@
 import jwt as jwt
 import passlib.hash as hash
+import sqlalchemy as sql
 import sqlalchemy.orm as orm
 import fastapi as fastapi
 import fastapi.security as security
@@ -28,12 +29,16 @@ JWT_SECRET = os.getenv("JWT_SECRET")
 
 async def get_category_by_name(
     db: orm.Session,
-    name: str
+    name: str,
+    user_id: int,
 ):
     """
-    Get a category by name
+    Get a category by name and user.
     """
-    return db.query(category_model.Category).filter(category_model.Category.name == name).first()
+    return db.query(category_model.Category).filter(
+        category_model.Category.name == name,
+        category_model.Category.user_id == user_id,
+    ).first()
 
 
 async def create_category(
@@ -44,7 +49,7 @@ async def create_category(
     """
     Create a new category if doesn't exist
     """
-    db_category = await get_category_by_name(db, category.name)
+    db_category = await get_category_by_name(db, category.name, user.id)
     if db_category:
         raise fastapi.HTTPException(
             status_code=400,

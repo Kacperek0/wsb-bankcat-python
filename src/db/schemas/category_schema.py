@@ -10,7 +10,6 @@ import pydantic
 
 class _CategoryBase(pydantic.BaseModel):
     name: str
-    # user_id: int
     # budget_id: int
 
 

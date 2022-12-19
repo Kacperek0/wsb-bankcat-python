@@ -10,7 +10,6 @@ import pydantic
 
 class _BudgetBase(pydantic.BaseModel):
     value: int
-    user_id: int
     category_id: int
 
 

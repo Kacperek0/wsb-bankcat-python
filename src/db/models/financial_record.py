@@ -20,5 +20,5 @@
 #     category_id = sql.Column(sql.Integer, sql.ForeignKey('categories.id'))
 
 
-#     user = orm.relationship('User', back_populates='financial_records' ,foreign_keys=[user_id], remote_side=id)
-#     category = orm.relationship('Category', back_populates='financial_records', foreign_keys=[category_id], remote_side=id)
+#     user = orm.relationship('User', back_populates='financial_records')
+#     category = orm.relationship('Category', back_populates='financial_records')

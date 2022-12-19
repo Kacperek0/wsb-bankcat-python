@@ -6,3 +6,12 @@ __pycache__
 
 # Environments
 .env
+
+# Alembic
+alembic.ini
+
+# Vscode
+.vscode
+
+# Pytest
+.pytest_cache

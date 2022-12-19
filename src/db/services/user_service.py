@@ -67,12 +67,14 @@ async def authenticate_user(
 
 
 async def create_token(
-    user: user_schema.User,
+    user: user_model.User,
 ):
     """
     Create a token
     """
     user_object = user_schema.User.from_orm(user)
+
+    print(user_object.dict())
 
     token = jwt.encode(
         user_object.dict(),

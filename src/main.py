@@ -3,11 +3,13 @@ from db.services import (
     database_session,
     user_service as user_service,
     category_service as category_service,
+    budget_service as budget_service,
 )
 
 from db.schemas import (
     user_schema as user_schema,
     category_schema as category_schema,
+    budget_schema as budget_schema,
 )
 
 import jwt as _jwt
@@ -37,9 +39,12 @@ async def create_user(
             detail='Email already registered'
         )
 
-    await user_service.create_user(db, user)
+    user = await user_service.create_user(db, user)
+    return user
 
-    return await user_service.create_token(user)
+    # TODO: Send email to user
+    # TODO: Fix 500 error from create_token due to UserCreate model instead of User model
+    # return await user_service.create_token(user)
 
 
 @app.post('/api/login', tags=['User'])
@@ -105,6 +110,16 @@ async def delete_category(
     db: _orm.Session = _fastapi.Depends(database_session.database_session),
 ):
     return await category_service.delete_category(db, user, category_id)
+
+
+@app.post('api/budget', response_model=budget_schema.Budget, tags=['Budget'])
+async def create_budget(
+    budget: budget_schema.BudgetCreate,
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await budget_service.create_budget(db, user, budget)
+
 
 if __name__ == '__main__':
     import uvicorn
