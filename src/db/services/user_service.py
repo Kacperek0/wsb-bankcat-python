@@ -74,8 +74,6 @@ async def create_token(
     """
     user_object = user_schema.User.from_orm(user)
 
-    print(user_object.dict())
-
     token = jwt.encode(
         user_object.dict(),
         JWT_SECRET
