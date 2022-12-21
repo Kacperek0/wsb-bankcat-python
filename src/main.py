@@ -112,7 +112,17 @@ async def delete_category(
     return await category_service.delete_category(db, user, category_id)
 
 
-@app.post('api/budget', response_model=budget_schema.Budget, tags=['Budget'])
+@app.get('/api/budget', response_model=list[budget_schema.Budget], tags=['Budget'])
+async def get_budget(
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    skip: int = 0,
+    limit: int = 100,
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await budget_service.get_budget(db, user)
+
+
+@app.post('/api/budget', response_model=budget_schema.Budget, tags=['Budget'])
 async def create_budget(
     budget: budget_schema.BudgetCreate,
     user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
