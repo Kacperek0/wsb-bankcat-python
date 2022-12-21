@@ -67,7 +67,7 @@ async def authenticate_user(
 
 
 async def create_token(
-    user: user_schema.User,
+    user: user_model.User,
 ):
     """
     Create a token

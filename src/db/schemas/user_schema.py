@@ -3,12 +3,12 @@ import pydantic
 
 class _UserBase(pydantic.BaseModel):
     email: str
+    name: str
+    surname: str
 
 
 class UserCreate(_UserBase):
     hashed_password: str
-    name: str
-    surname: str
 
     class Config:
         orm_mode = True

@@ -22,8 +22,6 @@ class User(Base):
     is_active = sql.Column(sql.Boolean, default=False)
 
     # financial_records = orm.relationship('FinancialRecord', back_populates='user')
-    categories = orm.relationship('Category', back_populates='user')
-    # budgets = orm.relationship('Budget', back_populates='user')
 
     def verify_password(self, password):
         return hash.bcrypt.verify(password, self.hashed_password)
