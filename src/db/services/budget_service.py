@@ -13,10 +13,12 @@ from db.services.database_session import database_session
 from db.models import (
     user as user_model,
     category as category_model,
+    budget as budget_model,
 )
 from db.schemas import (
     user_schema as user_schema,
     category_schema as category_schema,
+    budget_schema as budget_schema,
 )
 
 load_dotenv()
@@ -26,34 +28,39 @@ oauth2_schema = security.OAuth2PasswordBearer(tokenUrl='/api/login')
 JWT_SECRET = os.getenv("JWT_SECRET")
 
 
-async def get_budget_by_name(
+async def get_budget_by_category_id(
     db: orm.Session,
-    name: str
+    category_id: str,
+    user_id: int,
 ):
     """
     Get a category by name
     """
-    return db.query(category_model.Category).filter(category_model.Category.name == name).first()
+    return db.query(budget_model.Budget).filter(
+        budget_model.Budget.category_id == category_id,
+        budget_model.Budget.user_id == user_id,
+    ).first()
 
 
 async def create_budget(
     db: orm.Session,
     user: user_schema.User,
-    budget: category_schema.CategoryCreate,
+    budget: budget_schema.BudgetCreate,
 ):
     """
     Create a new category if doesn't exist
     """
-    db_budget = await get_budget_by_name(db, budget.name)
+    db_budget = await get_budget_by_category_id(db, budget.category_id, user.id)
     if db_budget:
         raise fastapi.HTTPException(
             status_code=400,
-            detail='Category already registered'
+            detail='Budget already registered'
         )
 
-    budget_object = category_model.Category(
-        name=budget.name,
+    budget_object = budget_model.Budget(
+        category_id=budget.category_id,
         user_id=user.id,
+        value=budget.value,
     )
     db.add(budget_object)
     db.commit()
@@ -61,16 +68,20 @@ async def create_budget(
     return budget_object
 
 
-# async def get_categories(
-#     db: orm.Session,
-#     user: user_schema.User,
-#     skip: int = 0,
-#     limit: int = 100,
-# ):
-#     """
-#     Get all categories
-#     """
-#     return db.query(category_model.Category).filter(category_model.Category.user_id == user.id).offset(skip).limit(limit).all()
+async def get_budget(
+    db: orm.Session,
+    user: user_schema.User,
+    skip: int = 0,
+    limit: int = 100,
+):
+    """
+    Get all categories
+    """
+
+    budgets = db.query(budget_model.Budget).filter(
+        budget_model.Budget.user_id == user.id,
+    ).offset(skip).limit(limit).all()
+    return budgets
 
 
 # async def update_category(

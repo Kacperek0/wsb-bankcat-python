@@ -9,18 +9,18 @@ import pydantic
 
 
 class _BudgetBase(pydantic.BaseModel):
-    value: int
     category_id: int
 
 
 class BudgetCreate(_BudgetBase):
-
+    value: int
     class Config:
         orm_mode = True
 
 
 class Budget(_BudgetBase):
     id: int
+    value: int
 
     class Config:
         orm_mode = True
