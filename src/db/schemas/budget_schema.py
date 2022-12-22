@@ -18,6 +18,13 @@ class BudgetCreate(_BudgetBase):
         orm_mode = True
 
 
+class BudgetUpdate(_BudgetBase):
+    value: int
+    category_id: int
+
+    class Config:
+        orm_mode = True
+
 class Budget(_BudgetBase):
     id: int
     value: int

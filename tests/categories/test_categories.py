@@ -42,26 +42,27 @@ async def test_categories():
         assert get_categories_response.json()[0]['name'] == 'Test Category'
         assert get_categories_response.json()[0]['id'] == post_categories_response.json()['id']
 
-        # pdb.set_trace()
-        # put_categories_response = await ac.put(f'/api/categories/{post_categories_response.json()["id"]}', json={ 'name': 'Test Category 2' }, headers={' Authorization ': f'Bearer {bearer}'})
-        # assert put_categories_response.status_code == 200
-        # assert 'name' in put_categories_response.json()
-        # assert 'id' in put_categories_response.json()
-        # assert put_categories_response.json()['name'] == 'Test Category 2'
+        category_id = get_categories_response.json()[0]['id']
+
+        put_categories_response = await ac.put(f'/api/categories/{category_id}', json={ 'name': 'Test Category 2' }, headers={'Authorization': f'Bearer {bearer}'})
+        assert put_categories_response.status_code == 200
+        assert 'name' in put_categories_response.json()
+        assert 'id' in put_categories_response.json()
+        assert put_categories_response.json()['name'] == 'Test Category 2'
 
         get_categories_after_put_response = await ac.get('/api/categories', headers={'Authorization': f'Bearer {bearer}'},
         params={'skip': 0, 'limit': 100})
         assert get_categories_after_put_response.status_code == 200
         assert 'name' in get_categories_after_put_response.json()[0]
         assert 'id' in get_categories_after_put_response.json()[0]
-        assert get_categories_after_put_response.json()[0]['name'] == 'Test Category'
+        assert get_categories_after_put_response.json()[0]['name'] == 'Test Category 2'
         assert get_categories_after_put_response.json()[0]['id'] == post_categories_response.json()['id']
 
         delete_categories_response = await ac.delete(f'/api/categories/{post_categories_response.json()["id"]}', headers={'Authorization': f'Bearer {bearer}'})
         assert delete_categories_response.status_code == 200
         assert 'name' in delete_categories_response.json()
         assert 'id' in delete_categories_response.json()
-        assert delete_categories_response.json()['name'] == 'Test Category'
+        assert delete_categories_response.json()['name'] == 'Test Category 2'
 
         get_categories_after_delete_response = await ac.get('/api/categories', headers={'Authorization': f'Bearer {bearer}'}, params={'skip': 0, 'limit': 100})
         assert get_categories_after_delete_response.status_code == 200

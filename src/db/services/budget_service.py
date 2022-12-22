@@ -84,53 +84,70 @@ async def get_budget(
     return budgets
 
 
-# async def update_category(
-#     db: orm.Session,
-#     user: user_schema.User,
-#     category_id: int,
-#     category: category_schema.CategoryUpdate,
-# ):
-#     """
-#     Update a category
-#     """
-#     db_category = db.query(category_model.Category).filter(category_model.Category.id == category_id).first()
-#     if not db_category:
-#         raise fastapi.HTTPException(
-#             status_code=404,
-#             detail='Category not found'
-#         )
-#     if db_category.user_id != user.id:
-#         raise fastapi.HTTPException(
-#             status_code=403,
-#             detail='Not enough permissions'
-#         )
+async def update_budget(
+    db: orm.Session,
+    user: user_schema.User,
+    budget_id: int,
+    budget: budget_schema.BudgetUpdate,
+):
+    """
+    Update a category
+    """
+    db_budget = db.query(budget_model.Budget).filter(
+        budget_model.Budget.id == budget_id,
+        budget_model.Budget.user_id == user.id,
+    ).first()
+    db_budget_in_current_category = db.query(budget_model.Budget).filter(
+        budget_model.Budget.category_id == budget.category_id,
+        budget_model.Budget.user_id == user.id,
+    ).first()
 
-#     db_category.name = category.name
-#     db.commit()
-#     db.refresh(db_category)
-#     return db_category
+    if db_budget_in_current_category and db_budget_in_current_category.id != budget_id:
+        raise fastapi.HTTPException(
+            status_code=400,
+            detail='Budget already registered in this category'
+        )
+    if not db_budget:
+        raise fastapi.HTTPException(
+            status_code=404,
+            detail='Budget not found'
+        )
+    if db_budget.user_id != user.id:
+        raise fastapi.HTTPException(
+            status_code=403,
+            detail='Not enough permissions'
+        )
+
+    db_budget.value = budget.value
+    db_budget.category_id = budget.category_id
+    db.commit()
+    db.refresh(db_budget)
+    return db_budget
 
 
-# async def delete_category(
-#     db: orm.Session,
-#     user: user_schema.User,
-#     category_id: int,
-# ):
-#     """
-#     Delete a category
-#     """
-#     db_category = db.query(category_model.Category).filter(category_model.Category.id == category_id).first()
-#     if not db_category:
-#         raise fastapi.HTTPException(
-#             status_code=404,
-#             detail='Category not found'
-#         )
-#     if db_category.user_id != user.id:
-#         raise fastapi.HTTPException(
-#             status_code=403,
-#             detail='Not enough permissions'
-#         )
+async def delete_budget(
+    db: orm.Session,
+    user: user_schema.User,
+    budget_id: int,
+):
+    """
+    Delete a category
+    """
+    db_budget = db.query(budget_model.Budget).filter(
+        budget_model.Budget.id == budget_id,
+        budget_model.Budget.user_id == user.id,
+    ).first()
+    if not db_budget:
+        raise fastapi.HTTPException(
+            status_code=404,
+            detail='Budget not found'
+        )
+    if db_budget.user_id != user.id:
+        raise fastapi.HTTPException(
+            status_code=403,
+            detail='Not enough permissions'
+        )
 
-#     db.delete(db_category)
-#     db.commit()
-#     return db_category
+    db.delete(db_budget)
+    db.commit()
+    return db_budget
