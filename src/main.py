@@ -131,6 +131,24 @@ async def create_budget(
     return await budget_service.create_budget(db, user, budget)
 
 
+@app.put('/api/budget/{budget_id}', response_model=budget_schema.Budget, tags=['Budget'])
+async def update_budget(
+    budget_id: int,
+    budget: budget_schema.BudgetUpdate,
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await budget_service.update_budget(db, user, budget_id, budget)
+
+
+@app.delete('/api/budget/{budget_id}', response_model=budget_schema.Budget, tags=['Budget'])
+async def delete_budget(
+    budget_id: int,
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await budget_service.delete_budget(db, user, budget_id)
+
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app, host='0.0.0.0', port=8000)

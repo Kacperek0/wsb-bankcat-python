@@ -49,3 +49,30 @@ async def test_categories():
         assert get_budgets_response.json()[0]['category_id'] == category_id
         assert get_budgets_response.json()[0]['value'] == 100
 
+        budget_id = get_budgets_response.json()[0]['id']
+
+        put_budgets_response = await ac.put(f'/api/budget/{budget_id}', json={
+            'category_id': category_id,
+            'value': 200
+        }, headers={'Authorization' : f'Bearer {bearer}'})
+        assert put_budgets_response.status_code == 200
+        assert 'category_id' in put_budgets_response.json()
+        assert 'value' in put_budgets_response.json()
+        assert put_budgets_response.json()['category_id'] == category_id
+        assert put_budgets_response.json()['value'] == 200
+
+        get_budgets_response = await ac.get('/api/budget', headers={'Authorization' : f'Bearer {bearer}'}, params={'limit': 100, 'skip': 0})
+        assert get_budgets_response.status_code == 200
+        assert len(get_budgets_response.json()) == 1
+        assert get_budgets_response.json()[0]['category_id'] == category_id
+        assert get_budgets_response.json()[0]['value'] == 200
+
+        budget_id = get_budgets_response.json()[0]['id']
+
+        delete_budgets_response = await ac.delete(f'/api/budget/{budget_id}', headers={'Authorization' : f'Bearer {bearer}'})
+        assert delete_budgets_response.status_code == 200
+        assert 'category_id' in delete_budgets_response.json()
+        assert 'value' in delete_budgets_response.json()
+        assert delete_budgets_response.json()['category_id'] == category_id
+        assert delete_budgets_response.json()['value'] == 200
+
