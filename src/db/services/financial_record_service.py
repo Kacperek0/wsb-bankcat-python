@@ -3,7 +3,9 @@ import passlib.hash as hash
 import sqlalchemy.orm as orm
 import fastapi as fastapi
 import fastapi.security as security
+from fastapi import UploadFile, File
 import datetime
+import csv
 
 from dotenv import load_dotenv
 
@@ -11,6 +13,7 @@ import os
 
 import db.database as db
 from db.services.database_session import database_session
+
 from db.models import (
     user as user_model,
     category as category_model,
@@ -22,6 +25,10 @@ from db.schemas import (
     category_schema as category_schema,
     budget_schema as budget_schema,
     financial_record_schema as financial_record_schema,
+)
+
+from db.services import (
+    category_service as category_service
 )
 
 load_dotenv()
@@ -248,3 +255,62 @@ async def delete_financial_record(
             status_code=404,
             detail='Financial record not found'
         )
+
+
+async def import_csv(
+    db: orm.Session,
+    user: user_schema.User,
+    csv_file: UploadFile = File(...),
+    header_row: int = 0,
+):
+    """
+    Import a csv file
+    """
+    csv_file_content = await csv_file.read()
+
+    csv_file_content = csv_file_content.decode('windows-1250')
+
+    csv_file_content = csv_file_content.splitlines()
+
+    csv_file_content = csv.reader(csv_file_content, delimiter=';')
+
+    results = []
+
+    for i in range(header_row):
+        next(csv_file_content)
+
+    for row in csv_file_content:
+        try:
+            date = row[0]
+            description = row[1]
+            category = row[3]
+            amount = row[4]
+            amount = amount.replace(',', '.').split(' ')[0]
+            amount = float(amount) * 100
+            amount = abs(int(amount))
+
+            check_category = await category_service.get_category_by_name(db, category, user.id)
+
+            if check_category:
+                category_id = check_category.id
+            else:
+                category_id = await category_service.create_category(db, user, category_schema.CategoryCreate(name=category))
+                category_id = category_id.id
+
+            financial_record = financial_record_schema.FinancialRecordCreate(
+                date=date,
+                category_id=category_id,
+                description=description,
+                amount=amount,
+            )
+            results.append(financial_record)
+
+            try:
+                status_code = await create_financial_record(db, user, financial_record)
+                print(status_code.id)
+            except fastapi.HTTPException:
+                continue
+        except IndexError:
+            break
+
+    return results
