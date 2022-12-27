@@ -6,6 +6,8 @@ import fastapi.security as security
 from fastapi import UploadFile, File
 import datetime
 import csv
+import re
+from PyPDF2 import PdfReader
 
 from dotenv import load_dotenv
 
@@ -106,7 +108,7 @@ async def create_financial_record(
 
     does_category_exist = await check_category(db, user, financial_record)
 
-    if not does_category_exist:
+    if not does_category_exist and financial_record.category_id != None:
         raise fastapi.HTTPException(
             status_code=400,
             detail='Category does not exist, please create it first or assign null.'
@@ -257,7 +259,7 @@ async def delete_financial_record(
         )
 
 
-async def import_csv(
+async def import_mbank_csv(
     db: orm.Session,
     user: user_schema.User,
     csv_file: UploadFile = File(...),
@@ -287,6 +289,7 @@ async def import_csv(
             amount = row[4]
             amount = amount.replace(',', '.').split(' ')[0]
             amount = float(amount) * 100
+            # TODO: IF amount < 0 should be skipped
             amount = abs(int(amount))
 
             check_category = await category_service.get_category_by_name(db, category, user.id)
@@ -314,3 +317,69 @@ async def import_csv(
             break
 
     return results
+
+
+async def import_pkobp_pdf(
+    db: orm.Session,
+    user: user_schema.User,
+    pdf_file: UploadFile = File(...),
+):
+    """
+    Import a pdf file
+    """
+    reader = PdfReader(pdf_file.file)
+    text = reader.pages[0].extract_text()
+    text = text.splitlines()
+    usable_data = []
+    is_usable = False
+    for line in text:
+        if line == 'Data waluty Opis operacji':
+            is_usable = True
+            continue
+        if is_usable:
+            usable_data.append(line)
+
+
+    process_data = []
+    for line in usable_data:
+        if re.match(r'[0-9]{2}\.[0-9]{2}\.[0-9]{4}', line):
+            process_data.append(line)
+
+    # Loop through data, group every 2 lines and create a list of tuples
+    results = []
+    for i in range(0, len(process_data), 2):
+        results.append((process_data[i], process_data[i+1]))
+
+    financial_records = []
+    # Loop through tuples and split them into date, description and amount
+    for i in range(len(results)):
+        first_row = results[i][0].split(' ')
+        second_row = results[i][1].split(' ')
+        date = first_row[0]
+        date = date.replace('.', '-')
+        # Reverse date to YYYY-MM-DD
+        date = date.split('-')
+        date = date[2] + '-' + date[1] + '-' + date[0]
+        description = ' '.join([x for x in second_row[1:] if x])
+        # TODO: If amount is higher than 1000, split is different
+        amount = first_row[-2]
+        amount = amount.replace(',', '.')
+        amount = float(amount) * 100
+        if amount < 0:
+            amount = abs(int(amount))
+            financial_record = financial_record_schema.FinancialRecordCreate(
+                date=date,
+                category_id=None,
+                description=description,
+                amount=amount
+            )
+            financial_records.append(financial_record)
+            try:
+                status_code = await create_financial_record(db, user, financial_record)
+                print(status_code.id)
+            except fastapi.HTTPException:
+                continue
+        else:
+            continue
+
+    return financial_records
