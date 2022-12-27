@@ -175,6 +175,7 @@ async def get_financial_records_by_category(
 ):
     return await financial_record_service.get_financial_records_by_category(db, user, category_id, skip, limit)
 
+
 @app.get('/api/financial-record-by-date', response_model=list[financial_record_schema.FinancialRecord], tags=['Financial Record'])
 async def get_financial_records_by_date(
     user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
@@ -184,6 +185,7 @@ async def get_financial_records_by_date(
     db: _orm.Session = _fastapi.Depends(database_session.database_session),
 ):
     return await financial_record_service.get_financial_records_by_date(db, user, date, skip, limit)
+
 
 @app.post('/api/financial-record', response_model=financial_record_schema.FinancialRecord, tags=['Financial Record'])
 async def create_financial_record(
@@ -211,6 +213,17 @@ async def delete_financial_record(
     db: _orm.Session = _fastapi.Depends(database_session.database_session),
 ):
     return await financial_record_service.delete_financial_record(db, user, financial_record_id)
+
+
+@app.post('/api/mbank/import_csv', response_model=list[financial_record_schema.FinancialRecordCreate], tags=['Financial Records Import'])
+async def import_csv(
+    file: _fastapi.UploadFile = _fastapi.File(...),
+    header_row: int = 0,
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await financial_record_service.import_csv(db, user, file, header_row)
+
 
 if __name__ == '__main__':
     import uvicorn
