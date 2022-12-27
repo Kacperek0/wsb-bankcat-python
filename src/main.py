@@ -4,18 +4,22 @@ from db.services import (
     user_service as user_service,
     category_service as category_service,
     budget_service as budget_service,
+    financial_record_service as financial_record_service,
 )
 
 from db.schemas import (
     user_schema as user_schema,
     category_schema as category_schema,
     budget_schema as budget_schema,
+    financial_record_schema as financial_record_schema,
 )
 
 import jwt as _jwt
 import fastapi as _fastapi
 import fastapi.security as _security
+from fastapi import UploadFile
 import sqlalchemy.orm as _orm
+import datetime
 
 
 app = _fastapi.FastAPI()
@@ -148,6 +152,65 @@ async def delete_budget(
     db: _orm.Session = _fastapi.Depends(database_session.database_session),
 ):
     return await budget_service.delete_budget(db, user, budget_id)
+
+
+@app.get('/api/financial-record', response_model=list[financial_record_schema.FinancialRecord], tags=['Financial Record'])
+async def get_financial_records(
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    skip: int = 0,
+    limit: int = 100,
+    query: str = None,
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await financial_record_service.get_financial_records(db, user, skip,limit, query)
+
+
+@app.get('/api/financial-record-by-category', response_model=list[financial_record_schema.FinancialRecord], tags=['Financial Record'])
+async def get_financial_records_by_category(
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    skip: int = 0,
+    limit: int = 100,
+    category_id: int = 0,
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await financial_record_service.get_financial_records_by_category(db, user, category_id, skip, limit)
+
+@app.get('/api/financial-record-by-date', response_model=list[financial_record_schema.FinancialRecord], tags=['Financial Record'])
+async def get_financial_records_by_date(
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    skip: int = 0,
+    limit: int = 100,
+    date: datetime.date = None,
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await financial_record_service.get_financial_records_by_date(db, user, date, skip, limit)
+
+@app.post('/api/financial-record', response_model=financial_record_schema.FinancialRecord, tags=['Financial Record'])
+async def create_financial_record(
+    financial_record: financial_record_schema.FinancialRecordCreate,
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await financial_record_service.create_financial_record(db, user, financial_record)
+
+
+@app.put('/api/financial-record/{financial_record_id}', response_model=financial_record_schema.FinancialRecord, tags=['Financial Record'])
+async def update_financial_record(
+    financial_record_id: int,
+    financial_record: financial_record_schema.FinancialRecordUpdate,
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await financial_record_service.put_financial_record(db, user, financial_record_id, financial_record)
+
+
+@app.delete('/api/financial-record/{financial_record_id}', response_model=financial_record_schema.FinancialRecord, tags=['Financial Record'])
+async def delete_financial_record(
+    financial_record_id: int,
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await financial_record_service.delete_financial_record(db, user, financial_record_id)
 
 if __name__ == '__main__':
     import uvicorn

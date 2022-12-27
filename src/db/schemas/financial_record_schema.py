@@ -1,4 +1,5 @@
 import pydantic
+import datetime
 
 """
     id = sql.Column(sql.Integer, primary_key=True, index=True)
@@ -11,20 +12,25 @@ import pydantic
 
 
 class _FinancialRecordBase(pydantic.BaseModel):
-    date: str
+    date: datetime.date
     amount: float
     description: str
 
-
 class FinancialRecordCreate(_FinancialRecordBase):
+    category_id: int | None # Category might be filled in later
 
     class Config:
         orm_mode = True
-        
 
-class User(_FinancialRecordBase):
+class FinancialRecordUpdate(_FinancialRecordBase):
+    category_id: int | None
+
+    class Config:
+        orm_mode = True
+
+class FinancialRecord(_FinancialRecordBase):
     id: int
-    category_id: int
+    category_id: int | None
 
     class Config:
         orm_mode = True
