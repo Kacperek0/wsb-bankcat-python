@@ -289,29 +289,31 @@ async def import_mbank_csv(
             amount = row[4]
             amount = amount.replace(',', '.').split(' ')[0]
             amount = float(amount) * 100
-            # TODO: IF amount < 0 should be skipped
-            amount = abs(int(amount))
+            if amount < 0:
+                amount = abs(int(amount))
 
-            check_category = await category_service.get_category_by_name(db, category, user.id)
+                check_category = await category_service.get_category_by_name(db, category, user.id)
 
-            if check_category:
-                category_id = check_category.id
+                if check_category:
+                    category_id = check_category.id
+                else:
+                    category_id = await category_service.create_category(db, user, category_schema.CategoryCreate(name=category))
+                    category_id = category_id.id
+
+                financial_record = financial_record_schema.FinancialRecordCreate(
+                    date=date,
+                    category_id=category_id,
+                    description=description,
+                    amount=amount,
+                )
+                results.append(financial_record)
+
+                try:
+                    status_code = await create_financial_record(db, user, financial_record)
+                    print(status_code.id)
+                except fastapi.HTTPException:
+                    continue
             else:
-                category_id = await category_service.create_category(db, user, category_schema.CategoryCreate(name=category))
-                category_id = category_id.id
-
-            financial_record = financial_record_schema.FinancialRecordCreate(
-                date=date,
-                category_id=category_id,
-                description=description,
-                amount=amount,
-            )
-            results.append(financial_record)
-
-            try:
-                status_code = await create_financial_record(db, user, financial_record)
-                print(status_code.id)
-            except fastapi.HTTPException:
                 continue
         except IndexError:
             break
@@ -361,10 +363,11 @@ async def import_pkobp_pdf(
         date = date.split('-')
         date = date[2] + '-' + date[1] + '-' + date[0]
         description = ' '.join([x for x in second_row[1:] if x])
-        # TODO: If amount is higher than 1000, split is different
-        amount = first_row[-2]
-        amount = amount.replace(',', '.')
-        amount = float(amount) * 100
+        for item in first_row:
+            if re.match(r'-[0-9]{1,3},[0-9]{2}', item):
+                amount = str(item)
+                amount = amount.replace(',', '.')
+                amount = float(amount) * 100
         if amount < 0:
             amount = abs(int(amount))
             financial_record = financial_record_schema.FinancialRecordCreate(
