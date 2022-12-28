@@ -8,6 +8,7 @@ import datetime
 import csv
 import re
 from PyPDF2 import PdfReader
+import pydantic
 
 from dotenv import load_dotenv
 
@@ -386,3 +387,46 @@ async def import_pkobp_pdf(
             continue
 
     return financial_records
+
+
+async def import_santander_csv(
+    db: orm.Session,
+    user: user_schema.User,
+    csv_file: UploadFile = File(...),
+):
+    csv_file_content = await csv_file.read()
+
+    csv_file_content = csv_file_content.decode('utf-8')
+
+    csv_file_content = csv_file_content.splitlines()
+
+    csv_file_content = csv.reader(csv_file_content, delimiter=',')
+
+    next(csv_file_content)
+
+    results = []
+
+    for row in csv_file_content:
+        date = row[0]
+        date = date.split('-')
+        date = date[2] + '-' + date[1] + '-' + date[0]
+        description = row[2] + ' ' + row[3]
+        amount = row[5]
+        amount = amount.replace(',', '.')
+        amount = float(amount) * 100
+        if amount < 0:
+            amount = abs(int(amount))
+            financial_record = financial_record_schema.FinancialRecordCreate(
+                date=date,
+                category_id=None,
+                description=description,
+                amount=amount
+            )
+            results.append(financial_record)
+            try:
+                status_code = await create_financial_record(db, user, financial_record)
+                print(status_code.id)
+            except fastapi.HTTPException:
+                continue
+
+    return results

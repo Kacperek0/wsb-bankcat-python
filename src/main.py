@@ -234,6 +234,15 @@ async def import_pkobp(
     return await financial_record_service.import_pkobp_pdf(db, user, file)
 
 
+@app.post('/api/santander/import_csv', response_model=list[financial_record_schema.FinancialRecordCreate], tags=['Financial Records Import'])
+async def import_santander(
+    file: _fastapi.UploadFile = _fastapi.File(...),
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await financial_record_service.import_santander_csv(db, user, file)
+
+
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app, host='0.0.0.0', port=8000)
