@@ -28,8 +28,11 @@ create_database.create_database()
 
 @app.get('/')
 async def root():
-    return {'Status': 'OK Dupa'}
+    return {'Status': 'OK'}
 
+@app.get('/health' , tags=['Health'])
+async def health():
+    return {'Status': '200 OK'}
 
 @app.post('/api/register', response_model=user_schema.UserCreate, tags=['User'])
 async def create_user(
