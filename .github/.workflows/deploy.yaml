@@ -1,0 +1,91 @@
+name: Deploy to Amazon ECS
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+env:
+  AWS_REGION: eu-west-1
+  ECR_REPOSITORY: bankcat-py
+  ECS_SERVICE: bankcat-py-service
+  ECS_CLUSTER: wsb-ecs-cluster
+  ECS_TASK_DEFINITION: .aws/task-definition.json
+  CONTAINER_NAME: bankcat-py
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@13d241b293754004c80624b5567555c4a39ffbe3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@aaf69d68aa3fb14c1d5a6be9ac61fe15b48453a2
+
+      - name: Create .env file
+        id: create-dotenv
+        run: |
+          echo 'POSTGRES_USER="${{ secrets.POSTGRES_USER }}"' >> .env
+          echo 'POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"' >> .env
+          echo 'POSTGRES_SERVER="${{ secrets.POSTGRES_SERVER }}"' >> .env
+          echo 'POSTGRES_PORT="${{ secrets.POSTGRES_PORT }}"' >> .env
+          echo 'DATABASE_NAME="${{ secrets.DATABASE_NAME }}"' >> .env
+          echo 'JWT_SECRET="${ secrets.JWT_SECRET }"' >> .env
+
+          echo 'TEST_POSTGRES_USER="${{ secrets.TEST_POSTGRES_USER }}"' >> .env
+          echo 'TEST_POSTGRES_PASSWORD="${{ secrets.TEST_POSTGRES_PASSWORD }}"' >> .env
+          echo 'TEST_POSTGRES_SERVER="${{ secrets.TEST_POSTGRES_SERVER }}"' >> .env
+          echo 'TEST_POSTGRES_PORT="${{ secrets.TEST_POSTGRES_PORT }}"' >> .env
+          echo 'TEST_DATABASE_NAME="${{ secrets.DATABASE_NAME }}"' >> .env
+          echo 'TEST_JWT_SECRET="${ secrets.JWT_SECRET }"' >> .env
+
+      - name: Run tests with pytest
+        run: |
+          pip install -r requirements.txt
+          pytest
+
+      - name: Build, tag, and push image to Amazon ECR
+        depends-on: run-tests
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build a docker container and
+          # push it to ECR so that it can
+          # be deployed to ECS.
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@97587c9d45a4930bf0e3da8dd2feb2a463cf4a3a
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@de0132cf8cdedb79975c6d42b77eb7ea193cf28e
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true

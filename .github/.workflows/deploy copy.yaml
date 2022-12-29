@@ -1,0 +1,30 @@
+name: Test on pull request
+
+on:
+  pull_request:
+    types: [edited, opened, synchronize, reopened]
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Create .env file
+        id: create-dotenv
+        run: |
+          echo 'TEST_POSTGRES_USER="${{ secrets.TEST_POSTGRES_USER }}"' >> .env
+          echo 'TEST_POSTGRES_PASSWORD="${{ secrets.TEST_POSTGRES_PASSWORD }}"' >> .env
+          echo 'TEST_POSTGRES_SERVER="${{ secrets.TEST_POSTGRES_SERVER }}"' >> .env
+          echo 'TEST_POSTGRES_PORT="${{ secrets.TEST_POSTGRES_PORT }}"' >> .env
+          echo 'TEST_DATABASE_NAME="${{ secrets.DATABASE_NAME }}"' >> .env
+          echo 'TEST_JWT_SECRET="${ secrets.JWT_SECRET }"' >> .env
+
+      - name: Run tests with pytest
+        run: |
+          pip install -r requirements.txt
+          pytest
