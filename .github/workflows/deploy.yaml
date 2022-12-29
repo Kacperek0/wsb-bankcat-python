@@ -1,9 +1,6 @@
 name: Deploy to AWS ECS
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     types: [closed]
     branches:
@@ -19,7 +16,7 @@ env:
 
 jobs:
   test:
-    name: Test
+    name: Deploy
     runs-on: ubuntu-latest
     environment: production
 
