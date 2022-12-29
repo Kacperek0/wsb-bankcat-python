@@ -24,7 +24,8 @@ jobs:
           echo 'TEST_DATABASE_NAME="${{ secrets.DATABASE_NAME }}"' >> .env
           echo 'TEST_JWT_SECRET="${ secrets.JWT_SECRET }"' >> .env
 
-      - name: Run tests with pytest
-        run: |
-          pip install -r requirements.txt
-          pytest
+#       - name: Run tests with pytest
+#         run: |
+#           pip install -r requirements.txt
+#           pytest
+
