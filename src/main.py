@@ -28,7 +28,7 @@ create_database.create_database()
 
 @app.get('/')
 async def root():
-    return {'Status': 'OK'}
+    return {'Status': 'Dupa'}
 
 
 @app.post('/api/register', response_model=user_schema.UserCreate, tags=['User'])
