@@ -1,4 +1,4 @@
-name: Deploy to Amazon ECS
+name: Deploy to AWS ECS
 
 on:
   push:
@@ -18,8 +18,8 @@ env:
   CONTAINER_NAME: bankcat-py
 
 jobs:
-  deploy:
-    name: Deploy
+  test:
+    name: Test
     runs-on: ubuntu-latest
     environment: production
 
