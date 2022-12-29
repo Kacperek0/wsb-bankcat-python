@@ -5,6 +5,7 @@ from db.services import (
     category_service as category_service,
     budget_service as budget_service,
     financial_record_service as financial_record_service,
+    dashboard_service as dashboard_service,
 )
 
 from db.schemas import (
@@ -12,6 +13,7 @@ from db.schemas import (
     category_schema as category_schema,
     budget_schema as budget_schema,
     financial_record_schema as financial_record_schema,
+    dashboard_schema as dashboard_schema,
 )
 
 import jwt as _jwt
@@ -244,6 +246,22 @@ async def import_santander(
     db: _orm.Session = _fastapi.Depends(database_session.database_session),
 ):
     return await financial_record_service.import_santander_csv(db, user, file)
+
+
+@app.get('/api/dashboard', response_model=dashboard_schema.Dashboard, tags=['Dashboard'])
+async def get_dashboard(
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await dashboard_service.get_dashboard(db, user)
+
+
+@app.get('/api/dashboard-with-spendings', response_model=dashboard_schema.DashboardWithSpendings, tags=['Dashboard'])
+async def get_dashboard_with_spendings(
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await dashboard_service.get_dashboard_with_spendings(db, user)
 
 
 if __name__ == '__main__':
