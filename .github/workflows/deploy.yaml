@@ -48,20 +48,19 @@ jobs:
           echo 'DATABASE_NAME="${{ secrets.DATABASE_NAME }}"' >> .env
           echo 'JWT_SECRET="${ secrets.JWT_SECRET }"' >> .env
 
-          echo 'TEST_POSTGRES_USER="${{ secrets.TEST_POSTGRES_USER }}"' >> .env
-          echo 'TEST_POSTGRES_PASSWORD="${{ secrets.TEST_POSTGRES_PASSWORD }}"' >> .env
-          echo 'TEST_POSTGRES_SERVER="${{ secrets.TEST_POSTGRES_SERVER }}"' >> .env
-          echo 'TEST_POSTGRES_PORT="${{ secrets.TEST_POSTGRES_PORT }}"' >> .env
-          echo 'TEST_DATABASE_NAME="${{ secrets.DATABASE_NAME }}"' >> .env
-          echo 'TEST_JWT_SECRET="${ secrets.JWT_SECRET }"' >> .env
+#           echo 'TEST_POSTGRES_USER="${{ secrets.TEST_POSTGRES_USER }}"' >> .env
+#           echo 'TEST_POSTGRES_PASSWORD="${{ secrets.TEST_POSTGRES_PASSWORD }}"' >> .env
+#           echo 'TEST_POSTGRES_SERVER="${{ secrets.TEST_POSTGRES_SERVER }}"' >> .env
+#           echo 'TEST_POSTGRES_PORT="${{ secrets.TEST_POSTGRES_PORT }}"' >> .env
+#           echo 'TEST_DATABASE_NAME="${{ secrets.DATABASE_NAME }}"' >> .env
+#           echo 'TEST_JWT_SECRET="${ secrets.JWT_SECRET }"' >> .env
 
-      - name: Run tests with pytest
-        run: |
-          pip install -r requirements.txt
-          pytest
+#       - name: Run tests with pytest
+#         run: |
+#           pip install -r requirements.txt
+#           pytest
 
       - name: Build, tag, and push image to Amazon ECR
-        depends-on: run-tests
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
