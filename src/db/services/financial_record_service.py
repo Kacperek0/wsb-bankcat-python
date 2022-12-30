@@ -475,3 +475,42 @@ async def import_pekaosa_csv(
 
     return results
 
+
+async def import_grupabps_csv(
+    db: orm.Session,
+    user: user_schema.User,
+    csv_file: UploadFile = File(...),
+):
+    csv_file_content = await csv_file.read()
+
+    csv_file_content = csv_file_content.decode('utf-8')
+
+    csv_file_content = csv_file_content.splitlines()
+
+    csv_file_content = csv.reader(csv_file_content, delimiter=',')
+
+    results = []
+
+    for row in csv_file_content:
+        date = row[0]
+        description = row[9]
+        amount = row[17]
+        amount = amount.replace(',', '.')
+        amount = float(amount) * 100
+        # Row 2 is indicatior for income (M) or expense (W)
+        if row[2] == 'W':
+            amount = abs(int(amount))
+            financial_record = financial_record_schema.FinancialRecordCreate(
+                date=date,
+                category_id=None,
+                description=description,
+                amount=amount
+            )
+            results.append(financial_record)
+            try:
+                status_code = await create_financial_record(db, user, financial_record)
+                print(status_code.id)
+            except fastapi.HTTPException:
+                continue
+
+    return results
