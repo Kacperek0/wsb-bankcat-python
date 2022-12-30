@@ -257,6 +257,14 @@ async def import_pekaosa(
     return await financial_record_service.import_pekaosa_csv(db, user, file)
 
 
+@app.post('/api/grupabps/import_csv', response_model=list[financial_record_schema.FinancialRecordCreate], tags=['Financial Records Import'])
+async def import_grupabps(
+    file: _fastapi.UploadFile = _fastapi.File(...),
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await financial_record_service.import_grupabps_csv(db, user, file)
+
 @app.get('/api/dashboard', response_model=dashboard_schema.Dashboard, tags=['Dashboard'])
 async def get_dashboard(
     user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
