@@ -430,3 +430,48 @@ async def import_santander_csv(
                 continue
 
     return results
+
+
+async def import_pekaosa_csv(
+    db: orm.Session,
+    user: user_schema.User,
+    csv_file: UploadFile = File(...),
+):
+    csv_file_content = await csv_file.read()
+
+    csv_file_content = csv_file_content.decode('utf-8')
+
+    csv_file_content = csv_file_content.splitlines()
+
+    csv_file_content = csv.reader(csv_file_content, delimiter=';')
+
+    next(csv_file_content)
+
+    results = []
+
+    for row in csv_file_content:
+        date = row[0]
+        date = date.split('.')
+        date = date[2] + '-' + date[1] + '-' + date[0]
+        description = row[2] + ' ' + row[3] + ' ' + row[6]
+        amount = row[7]
+        amount = amount.replace(' ', '')
+        amount = amount.replace(',', '.')
+        amount = float(amount) * 100
+        if amount < 0:
+            amount = abs(int(amount))
+            financial_record = financial_record_schema.FinancialRecordCreate(
+                date=date,
+                category_id=None,
+                description=description,
+                amount=amount
+            )
+            results.append(financial_record)
+            try:
+                status_code = await create_financial_record(db, user, financial_record)
+                print(status_code.id)
+            except fastapi.HTTPException:
+                continue
+
+    return results
+
