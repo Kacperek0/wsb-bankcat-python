@@ -514,3 +514,62 @@ async def import_grupabps_csv(
                 continue
 
     return results
+
+
+async def import_millenium_pdf(
+    db: orm.Session,
+    user: user_schema.User,
+    pdf_file: UploadFile = File(...),
+):
+    reader = PdfReader(pdf_file.file)
+    pages = len(reader.pages)
+
+    parsed_text = []
+    for page in range(pages):
+        text = reader.pages[page].extract_text()
+        text = text.splitlines()
+        # Remove empty lines
+        text = [x for x in text if x]
+        usable_data = False
+        for i in range(len(text)):
+            if text[i] == 'WAL. OPIS TRANSAKCJI WARTOŚĆ SALDO':
+                usable_data = True
+                continue
+
+            if usable_data:
+                parsed_text.append(text[i])
+
+    # Split data into chunks, each chunk is starting with date
+    split_data = []
+    for iter, item in enumerate(parsed_text):
+        if item.startswith('20'):
+            split_data.append(parsed_text[iter:iter+3])
+
+    financial_records = []
+    for record in split_data:
+        date = re.findall(r'\d{4}-\d{2}-\d{2}', record[0])[0]
+        try:
+            amount = re.findall(r'\d{1,3},\d{2}-', record[0])[0] or re.match(r'\d{0,} \d{1,3},\d{2}-', record[0])[0]
+        except IndexError:
+            continue
+        description = record[1] + ' ' + record[2]
+
+        amount = amount.strip('-')
+        amount = amount.replace(' ', '')
+        amount = amount.replace(',', '.')
+        amount = float(amount) * 100
+
+        financial_record = financial_record_schema.FinancialRecordCreate(
+            date=date,
+            category_id=None,
+            description=description,
+            amount=amount
+        )
+        financial_records.append(financial_record)
+        try:
+            status_code = await create_financial_record(db, user, financial_record)
+            print(status_code.id)
+        except fastapi.HTTPException:
+            continue
+
+    return financial_records
