@@ -31,3 +31,9 @@ class DashboardWithSpendings(_DashboardBase):
 
     class Config:
         orm_mode = True
+
+class DashboardCategories(pydantic.BaseModel):
+    categories: list
+
+    class Config:
+        orm_mode = True
