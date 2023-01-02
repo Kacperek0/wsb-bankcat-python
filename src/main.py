@@ -93,6 +93,14 @@ async def get_categories(
     return await category_service.get_categories(db, user, skip, limit)
 
 
+@app.get('/api/categories/{category_id}', response_model=category_schema.Category, tags=['Category'])
+async def get_category_by_id(
+    category_id: int,
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await category_service.get_category_by_id(db, user, category_id)
+
 @app.post('/api/categories', response_model=category_schema.Category ,tags=['Category'])
 async def create_category(
     category: category_schema.CategoryCreate,
@@ -290,6 +298,16 @@ async def get_dashboard_with_spendings(
     db: _orm.Session = _fastapi.Depends(database_session.database_session),
 ):
     return await dashboard_service.get_dashboard_with_spendings(db, user)
+
+
+@app.get('/api/categories-dashboard', response_model=dashboard_schema.DashboardCategories, tags=['Dashboard'])
+async def get_categories_dashboard(
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+    skip: int = 0,
+    limit: int = 100,
+):
+    return await dashboard_service.get_categories_dashboard(db, user)
 
 
 if __name__ == '__main__':

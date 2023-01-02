@@ -128,3 +128,25 @@ async def delete_category(
     db.delete(db_category)
     db.commit()
     return db_category
+
+async def get_category_by_id(
+    db: orm.Session,
+    user: user_schema.User,
+    category_id: int,
+):
+    """
+    Get a category by id
+    """
+    db_category = db.query(category_model.Category).filter(category_model.Category.id == category_id).first()
+    if not db_category:
+        raise fastapi.HTTPException(
+            status_code=404,
+            detail='Category not found'
+        )
+    if db_category.user_id != user.id:
+        raise fastapi.HTTPException(
+            status_code=403,
+            detail='Not enough permissions'
+        )
+
+    return db_category
