@@ -151,3 +151,26 @@ async def delete_budget(
     db.delete(db_budget)
     db.commit()
     return db_budget
+
+
+async def get_budget_by_id(
+    db: orm.Session,
+    user: user_schema.User,
+    budget_id: int,
+):
+    """
+    Get a category by id
+    """
+    db_budget = db.query(budget_model.Budget).filter(budget_model.Budget.id == budget_id).first()
+    if not db_budget:
+        raise fastapi.HTTPException(
+            status_code=404,
+            detail='Category not found'
+        )
+    if db_budget.user_id != user.id:
+        raise fastapi.HTTPException(
+            status_code=403,
+            detail='Not enough permissions'
+        )
+
+    return db_budget

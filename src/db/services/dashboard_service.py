@@ -106,3 +106,46 @@ async def get_categories_dashboard(
         categories=results
     )
 
+
+async def get_budget_dashboard(
+    db: orm.Session,
+    user: user_model.User,
+    skip: int = 0,
+    limit: int = 100,
+):
+    """
+    Get a dashboard with categories
+    """
+    user_categories = db.query(category_model.Category).filter(category_model.Category.user_id == user.id).offset(skip).limit(limit).all()
+
+    results = []
+
+    for category in user_categories:
+        budget = db.query(budget_model.Budget).filter(budget_model.Budget.category_id == category.id).first()
+        financial_records = db.query(financial_record_model.FinancialRecord).filter(financial_record_model.FinancialRecord.category_id == category.id).all()
+        spendings = lambda financial_records: sum([financial_record.amount for financial_record in financial_records])
+
+        if not budget:
+            budget = budget_model.Budget(
+                id=None,
+                value=0,
+                category_id=category.id,
+                user_id=user.id
+            )
+
+        results.append({
+            'id': budget.id,
+            'budget': budget.value,
+            'category': {
+                'id': category.id,
+                'name': category.name,
+                'spendings': spendings(financial_records)
+            }
+        })
+
+    results.sort(key=lambda x: x['category']['spendings'], reverse=True)
+
+    return dashboard_schema.DashboardBudget(
+        user_id=user.id,
+        budget=results
+    )
