@@ -101,6 +101,7 @@ async def get_category_by_id(
 ):
     return await category_service.get_category_by_id(db, user, category_id)
 
+
 @app.post('/api/categories', response_model=category_schema.Category ,tags=['Category'])
 async def create_category(
     category: category_schema.CategoryCreate,
@@ -137,6 +138,15 @@ async def get_budget(
     db: _orm.Session = _fastapi.Depends(database_session.database_session),
 ):
     return await budget_service.get_budget(db, user)
+
+
+@app.get('/api/budget/{budget_id}', response_model=budget_schema.Budget, tags=['Budget'])
+async def get_category_by_id(
+    budget_id: int,
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await budget_service.get_budget_by_id(db, user, budget_id)
 
 
 @app.post('/api/budget', response_model=budget_schema.Budget, tags=['Budget'])
@@ -308,6 +318,16 @@ async def get_categories_dashboard(
     limit: int = 100,
 ):
     return await dashboard_service.get_categories_dashboard(db, user)
+
+
+@app.get('/api/budget-dashboard', response_model=dashboard_schema.DashboardBudget, tags=['Dashboard'])
+async def get_budget_dashboard(
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+    skip: int = 0,
+    limit: int = 100,
+):
+    return await dashboard_service.get_budget_dashboard(db, user, skip, limit)
 
 
 if __name__ == '__main__':
