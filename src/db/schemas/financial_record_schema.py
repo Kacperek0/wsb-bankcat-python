@@ -28,6 +28,13 @@ class FinancialRecordUpdate(_FinancialRecordBase):
     class Config:
         orm_mode = True
 
+class FinancialRecordMassCategoryAssignment(pydantic.BaseModel):
+    category_id: int
+    financial_record_ids: list[int]
+
+    class Config:
+        orm_mode = True
+
 class FinancialRecord(_FinancialRecordBase):
     id: int
     category_id: int | None

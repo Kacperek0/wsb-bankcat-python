@@ -219,6 +219,15 @@ async def create_financial_record(
     return await financial_record_service.create_financial_record(db, user, financial_record)
 
 
+@app.post('/api/financial-record/mass-category-assigment', response_model=list[financial_record_schema.FinancialRecord], tags=['Financial Record'])
+async def assign_financial_records(
+    financial_records: financial_record_schema.FinancialRecordMassCategoryAssignment,
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    return await financial_record_service.assign_financial_records(db, user, financial_records)
+
+
 @app.put('/api/financial-record/{financial_record_id}', response_model=financial_record_schema.FinancialRecord, tags=['Financial Record'])
 async def update_financial_record(
     financial_record_id: int,
