@@ -190,8 +190,9 @@ async def get_financial_records(
     limit: int = 100,
     query: str = None,
     db: _orm.Session = _fastapi.Depends(database_session.database_session),
+    start_date: datetime.date = datetime.date.today().replace(day=1)
 ):
-    return await financial_record_service.get_financial_records(db, user, skip,limit, query)
+    return await financial_record_service.get_financial_records(db, user, skip,limit, query, start_date)
 
 
 @app.get('/api/financial-record-by-category', response_model=list[financial_record_schema.FinancialRecord], tags=['Financial Record'])
@@ -201,19 +202,9 @@ async def get_financial_records_by_category(
     limit: int = 100,
     category_id: int = 0,
     db: _orm.Session = _fastapi.Depends(database_session.database_session),
+    start_date: datetime.date = datetime.date.today().replace(day=1)
 ):
-    return await financial_record_service.get_financial_records_by_category(db, user, category_id, skip, limit)
-
-
-@app.get('/api/financial-record-by-date', response_model=list[financial_record_schema.FinancialRecord], tags=['Financial Record'])
-async def get_financial_records_by_date(
-    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
-    skip: int = 0,
-    limit: int = 100,
-    date: datetime.date = None,
-    db: _orm.Session = _fastapi.Depends(database_session.database_session),
-):
-    return await financial_record_service.get_financial_records_by_date(db, user, date, skip, limit)
+    return await financial_record_service.get_financial_records_by_category(db, user, category_id, skip, limit, start_date)
 
 
 @app.post('/api/financial-record', response_model=financial_record_schema.FinancialRecord, tags=['Financial Record'])
