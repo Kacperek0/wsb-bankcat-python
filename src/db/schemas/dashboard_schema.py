@@ -1,3 +1,4 @@
+import datetime
 import pydantic
 
 from db.schemas.budget_schema import Budget
@@ -34,12 +35,14 @@ class DashboardWithSpendings(_DashboardBase):
 
 class DashboardCategories(pydantic.BaseModel):
     categories: list
+    start_date: datetime.date
 
     class Config:
         orm_mode = True
 
 class DashboardBudget(pydantic.BaseModel):
     budget: list
+    start_date: datetime.date
 
     class Config:
         orm_mode = True

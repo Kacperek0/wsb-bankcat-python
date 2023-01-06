@@ -9,6 +9,8 @@ import csv
 import re
 from PyPDF2 import PdfReader
 import pydantic
+from dateutil.relativedelta import relativedelta
+
 
 from dotenv import load_dotenv
 
@@ -143,6 +145,7 @@ async def get_financial_records(
     skip: int = 0,
     limit: int = 100,
     query: str = None,
+    start_date: datetime.date = datetime.date.today().replace(day=1),
 ):
     """
     Get all financial records
@@ -151,14 +154,19 @@ async def get_financial_records(
         results = db.query(financial_record_model.FinancialRecord).filter(
             financial_record_model.FinancialRecord.user_id == user.id,
             financial_record_model.FinancialRecord.description.like(f'%{query}%'),
+            financial_record_model.FinancialRecord.date >= start_date,
+            financial_record_model.FinancialRecord.date < (start_date + relativedelta(months=+1)),
         ).order_by(financial_record_model.FinancialRecord.date.desc()).offset(skip).limit(limit).all()
 
     else:
         results = db.query(financial_record_model.FinancialRecord).filter(
             financial_record_model.FinancialRecord.user_id == user.id,
+            financial_record_model.FinancialRecord.date >= start_date,
+            financial_record_model.FinancialRecord.date < (start_date + relativedelta(months=+1)),
         ).order_by(financial_record_model.FinancialRecord.date.desc()).offset(skip).limit(limit).all()
 
     return results
+
 
 async def get_financial_records_by_category(
     db: orm.Session,
@@ -166,39 +174,23 @@ async def get_financial_records_by_category(
     category_id: int,
     skip: int = 0,
     limit: int = 100,
+    start_date: datetime.date = datetime.date.today().replace(day=1)
 ):
     """
     Get all financial records by category
     """
     if category_id == 0:
         return db.query(financial_record_model.FinancialRecord).filter(
-            financial_record_model.FinancialRecord.user_id == user.id
+            financial_record_model.FinancialRecord.user_id == user.id,
+            financial_record_model.FinancialRecord.date >= start_date,
+            financial_record_model.FinancialRecord.date < (start_date + relativedelta(months=+1)),
         ).offset(skip).limit(limit).all()
     else:
         return db.query(financial_record_model.FinancialRecord).filter(
             financial_record_model.FinancialRecord.user_id == user.id,
             financial_record_model.FinancialRecord.category_id == category_id,
-        ).offset(skip).limit(limit).all()
-
-
-async def get_financial_records_by_date(
-    db: orm.Session,
-    user: user_schema.User,
-    date: datetime.date,
-    skip: int = 0,
-    limit: int = 100,
-):
-    """
-    Get all financial records by date
-    """
-    if date == None:
-        return db.query(financial_record_model.FinancialRecord).filter(
-            financial_record_model.FinancialRecord.user_id == user.id,
-        ).offset(skip).limit(limit).all()
-    else:
-        return db.query(financial_record_model.FinancialRecord).filter(
-            financial_record_model.FinancialRecord.user_id == user.id,
-            financial_record_model.FinancialRecord.date == date,
+            financial_record_model.FinancialRecord.date >= start_date,
+            financial_record_model.FinancialRecord.date < (start_date + relativedelta(months=+1)),
         ).offset(skip).limit(limit).all()
 
 

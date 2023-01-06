@@ -1,8 +1,10 @@
+import datetime
 import jwt as jwt
 import passlib.hash as hash
 import sqlalchemy.orm as orm
 import fastapi as fastapi
 import fastapi.security as security
+from dateutil.relativedelta import relativedelta
 
 from dotenv import load_dotenv
 
@@ -75,6 +77,7 @@ async def get_categories_dashboard(
     user: user_model.User,
     skip: int = 0,
     limit: int = 100,
+    date_from: datetime.date = datetime.date.today().replace(day=1),
 ):
     """
     Get a dashboard with categories
@@ -85,7 +88,16 @@ async def get_categories_dashboard(
 
     for category in user_categories:
         budget = db.query(budget_model.Budget).filter(budget_model.Budget.category_id == category.id).first()
-        financial_records = db.query(financial_record_model.FinancialRecord).filter(financial_record_model.FinancialRecord.category_id == category.id).all()
+        financial_records = db.query(
+            financial_record_model.FinancialRecord
+            ).filter(
+                financial_record_model.FinancialRecord.category_id == category.id
+                ).filter(
+                    financial_record_model.FinancialRecord.date >= date_from
+                    ).filter(
+                        financial_record_model.FinancialRecord.date < (date_from + relativedelta(months=+1)
+                    )
+                ).all()
         spendings = lambda financial_records: sum([financial_record.amount for financial_record in financial_records])
 
         budget_value = 0
@@ -103,7 +115,8 @@ async def get_categories_dashboard(
 
     return dashboard_schema.DashboardCategories(
         user_id=user.id,
-        categories=results
+        categories=results,
+        start_date=date_from
     )
 
 
@@ -112,6 +125,7 @@ async def get_budget_dashboard(
     user: user_model.User,
     skip: int = 0,
     limit: int = 100,
+    date_from: datetime.date = datetime.date.today().replace(day=1),
 ):
     """
     Get a dashboard with categories
@@ -122,7 +136,16 @@ async def get_budget_dashboard(
 
     for category in user_categories:
         budget = db.query(budget_model.Budget).filter(budget_model.Budget.category_id == category.id).first()
-        financial_records = db.query(financial_record_model.FinancialRecord).filter(financial_record_model.FinancialRecord.category_id == category.id).all()
+        financial_records = db.query(
+            financial_record_model.FinancialRecord
+            ).filter(
+                financial_record_model.FinancialRecord.category_id == category.id
+                ).filter(
+                    financial_record_model.FinancialRecord.date >= date_from
+                    ).filter(
+                        financial_record_model.FinancialRecord.date < (date_from + relativedelta(months=+1)
+                    )
+                ).all()
         spendings = lambda financial_records: sum([financial_record.amount for financial_record in financial_records])
 
         if not budget:
@@ -147,5 +170,6 @@ async def get_budget_dashboard(
 
     return dashboard_schema.DashboardBudget(
         user_id=user.id,
-        budget=results
+        budget=results,
+        start_date=date_from
     )
