@@ -331,8 +331,9 @@ async def get_categories_dashboard(
     db: _orm.Session = _fastapi.Depends(database_session.database_session),
     skip: int = 0,
     limit: int = 100,
+    start_date: datetime.date = datetime.date.today().replace(day=1)
 ):
-    return await dashboard_service.get_categories_dashboard(db, user)
+    return await dashboard_service.get_categories_dashboard(db, user, skip, limit, start_date)
 
 
 @app.get('/api/budget-dashboard', response_model=dashboard_schema.DashboardBudget, tags=['Dashboard'])
@@ -341,8 +342,9 @@ async def get_budget_dashboard(
     db: _orm.Session = _fastapi.Depends(database_session.database_session),
     skip: int = 0,
     limit: int = 100,
+    start_date: datetime.date = datetime.date.today().replace(day=1),
 ):
-    return await dashboard_service.get_budget_dashboard(db, user, skip, limit)
+    return await dashboard_service.get_budget_dashboard(db, user, skip, limit, start_date)
 
 
 if __name__ == '__main__':
