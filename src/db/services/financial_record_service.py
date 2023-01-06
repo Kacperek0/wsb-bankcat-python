@@ -202,6 +202,38 @@ async def get_financial_records_by_date(
         ).offset(skip).limit(limit).all()
 
 
+async def assign_financial_records(
+    db: orm.Session,
+    user: user_schema.User,
+    financial_records: financial_record_schema.FinancialRecordMassCategoryAssignment
+):
+    """
+    Assign financial records to a category
+    """
+    updated_records = []
+    for financial_record_id in financial_records.financial_record_ids:
+        db_financial_record = await get_financial_record_by_id(
+            db,
+            financial_record_id,
+            user.id,
+        )
+
+        if db_financial_record:
+            db_financial_record.category_id = financial_records.category_id
+            db.commit()
+            db.refresh(db_financial_record)
+            updated_records.append(db_financial_record)
+
+        else:
+            raise fastapi.HTTPException(
+                status_code=404,
+                detail='Financial record not found'
+            )
+
+    return updated_records
+
+
+
 async def put_financial_record(
     db: orm.Session,
     user: user_schema.User,
