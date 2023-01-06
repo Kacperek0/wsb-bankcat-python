@@ -148,15 +148,17 @@ async def get_financial_records(
     Get all financial records
     """
     if query:
-        return db.query(financial_record_model.FinancialRecord).filter(
+        results = db.query(financial_record_model.FinancialRecord).filter(
             financial_record_model.FinancialRecord.user_id == user.id,
             financial_record_model.FinancialRecord.description.like(f'%{query}%'),
-        ).offset(skip).limit(limit).all()
-    else:
-        return db.query(financial_record_model.FinancialRecord).filter(
-            financial_record_model.FinancialRecord.user_id == user.id,
-        ).offset(skip).limit(limit).all()
+        ).order_by(financial_record_model.FinancialRecord.date.desc()).offset(skip).limit(limit).all()
 
+    else:
+        results = db.query(financial_record_model.FinancialRecord).filter(
+            financial_record_model.FinancialRecord.user_id == user.id,
+        ).order_by(financial_record_model.FinancialRecord.date.desc()).offset(skip).limit(limit).all()
+
+    return results
 
 async def get_financial_records_by_category(
     db: orm.Session,
