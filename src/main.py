@@ -76,6 +76,12 @@ async def genetate_token(
     return await user_service.create_token(user)
 
 
+@app.post('/api/logout', tags=['User'])
+async def logout(
+    user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
+):
+    return {'Status': 'OK'}
+
 @app.get('/api/users/me', response_model=user_schema.User, tags=['User'])
 async def get_user(
     user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
