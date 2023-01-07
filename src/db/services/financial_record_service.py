@@ -290,7 +290,6 @@ async def import_mbank_csv(
     db: orm.Session,
     user: user_schema.User,
     csv_file: UploadFile = File(...),
-    header_row: int = 0,
 ):
     """
     Import a csv file
@@ -305,12 +304,42 @@ async def import_mbank_csv(
 
     results = []
 
-    for i in range(header_row):
+    skip_rows = 0
+    for row in csv_file_content:
+        try:
+            if '#Data operacji' not in row[0]:
+                skip_rows += 1
+            else:
+                break
+        except IndexError:
+            skip_rows += 1
+
+    for i in range(skip_rows):
         next(csv_file_content)
 
     for row in csv_file_content:
         try:
             date = row[0]
+            if re.match(r'^\d{2}-\d{2}-\d{4}$', date):
+                date = date.split('-')
+                date = date[2] + '-' + date[1] + '-' + date[0]
+            elif re.match(r'^\d{4}.\d{2}.\d{2}$', date):
+                date = date.replace('.', '-')
+            elif re.match(r'^\d{2}.\d{2}.\d{4}$', date):
+                date = date.split('.')
+                date = date[2] + '-' + date[1] + '-' + date[0]
+            elif re.match(r'^\d{4}/\d{2}/\d{2}$', date):
+                date = date.replace('/', '-')
+            elif re.match(r'^\d{2}/\d{2}/\d{4}$', date):
+                date = date.split('/')
+                date = date[2] + '-' + date[1] + '-' + date[0]
+            elif re.match(r'^\d{4}-\d{2}-\d{2}$', date):
+                pass
+            else:
+                raise fastapi.HTTPException(
+                    status_code=400,
+                    detail='Unsupported date format, please go to your bank and change default date format one of the following types: YYYY-MM-DD, DD-MM-YYYY, YYYY.MM.DD, DD.MM.YYYY, YYYY/MM/DD, DD/MM/YYYY'
+                )
             description = row[1]
             category = row[3]
             amount = row[4]
@@ -343,7 +372,10 @@ async def import_mbank_csv(
             else:
                 continue
         except IndexError:
-            break
+            raise fastapi.HTTPException(
+                status_code=400,
+                detail='Invalid file format'
+            )
 
     return results
 

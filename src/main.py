@@ -248,11 +248,10 @@ async def delete_financial_record(
 @app.post('/api/mbank/import_csv', response_model=list[financial_record_schema.FinancialRecordCreate], tags=['Financial Records Import'])
 async def import_mbank(
     file: _fastapi.UploadFile = _fastapi.File(...),
-    header_row: int = 0,
     user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
     db: _orm.Session = _fastapi.Depends(database_session.database_session),
 ):
-    return await financial_record_service.import_mbank_csv(db, user, file, header_row)
+    return await financial_record_service.import_mbank_csv(db, user, file)
 
 
 @app.post('/api/pkobp/import_pdf', response_model=list[financial_record_schema.FinancialRecordCreate], tags=['Financial Records Import'])
