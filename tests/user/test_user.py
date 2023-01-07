@@ -8,7 +8,7 @@ from tests.conf_test_db import app
 test_user_email = 'test-user@example.com'
 test_user_name = 'Test'
 test_user_surname = 'User'
-test_user_password = 'test-password'
+test_user_password = 'Test-Passw0rd!'
 
 @pytest.mark.asyncio
 async def test_all_users():
@@ -25,6 +25,20 @@ async def test_all_users():
         assert 'surname' in response.json()
         # TODO: Should not return password
         assert 'hashed_password' in response.json()
+
+        too_short_password = '123'
+        too_short_password_response = await ac.post('/api/register', json={
+            'email': test_user_email,
+            'name': test_user_name,
+            'surname': test_user_surname,
+            'hashed_password': too_short_password,
+        })
+        assert too_short_password_response.status_code == 422
+        assert 'detail' in too_short_password_response.json()
+        assert 'hashed_password' in too_short_password_response.json()['detail'][0]['loc']
+        assert 'ensure this value has at least 8 characters' in too_short_password_response.json()['detail'][0]['msg']
+        assert 'value_error.any_str.min_length' in too_short_password_response.json()['detail'][0]['type']
+
 
         login_response = await ac.post('/api/login', data={
             'username': test_user_email,

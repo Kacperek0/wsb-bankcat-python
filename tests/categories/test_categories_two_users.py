@@ -8,7 +8,7 @@ from tests.conf_test_db import app
 users = ('test-user@example.com', 'test-user2@example.com')
 test_user_name = 'Test'
 test_user_surname = 'User'
-test_user_password = 'test-password'
+test_user_password = 'Test-Passw0rd!'
 
 @pytest.mark.asyncio
 async def test_categories():

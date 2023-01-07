@@ -9,7 +9,7 @@ class _UserBase(pydantic.BaseModel):
 
 
 class UserCreate(_UserBase):
-    hashed_password: str = Query(..., min_length=8, max_length=255, regex=r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$")
+    hashed_password: str = Query(..., min_length=8, max_length=255, regex=r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*(_|[^\w])).+$')
 
     class Config:
         orm_mode = True
