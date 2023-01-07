@@ -236,7 +236,7 @@ async def update_financial_record(
     return await financial_record_service.put_financial_record(db, user, financial_record_id, financial_record)
 
 
-@app.delete('/api/financial-record/{financial_record_id}', response_model=financial_record_schema.FinancialRecord, tags=['Financial Record'])
+@app.delete('/api/financial-record/{financial_record_id}', response_model=financial_record_schema.FinancialRecordDelete, tags=['Financial Record'])
 async def delete_financial_record(
     financial_record_id: int,
     user: user_schema.User = _fastapi.Depends(user_service.get_current_user),

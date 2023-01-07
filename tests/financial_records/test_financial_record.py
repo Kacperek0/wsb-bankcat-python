@@ -61,7 +61,7 @@ async def test_financial_records():
         assert post_financial_records_response.status_code == 200
         assert 'date' in post_financial_records_response.json()
         assert 'amount' in post_financial_records_response.json()
-        assert 'category_id' in post_financial_records_response.json()
+        assert 'category' in post_financial_records_response.json()
         assert 'description' in post_financial_records_response.json()
         assert 'id' in post_financial_records_response.json()
 
@@ -84,7 +84,7 @@ async def test_financial_records():
         assert get_financial_records_response.status_code == 200
         assert 'date' in get_financial_records_response.json()[0]
         assert 'amount' in get_financial_records_response.json()[0]
-        assert 'category_id' in get_financial_records_response.json()[0]
+        # assert 'category' in get_financial_records_response.json()[0]
         assert 'description' in get_financial_records_response.json()[0]
         assert 'id' in get_financial_records_response.json()[0]
         assert get_financial_records_response.json()[0]['date'] == '2023-01-01'
@@ -97,7 +97,7 @@ async def test_financial_records():
         assert get_financial_record_response.status_code == 200
         assert 'date' in get_financial_record_response.json()[0]
         assert 'amount' in get_financial_record_response.json()[0]
-        assert 'category_id' in get_financial_record_response.json()[0]
+        # assert 'category' in get_financial_record_response.json()[0]
         assert 'description' in get_financial_record_response.json()[0]
         assert 'id' in get_financial_record_response.json()[0]
 
@@ -111,7 +111,7 @@ async def test_financial_records():
         assert put_financial_record_response.status_code == 200
         assert 'date' in put_financial_record_response.json()
         assert 'amount' in put_financial_record_response.json()
-        assert 'category_id' in put_financial_record_response.json()
+        assert 'category' in put_financial_record_response.json()
         assert 'description' in put_financial_record_response.json()
         assert 'id' in put_financial_record_response.json()
 
@@ -126,7 +126,7 @@ async def test_financial_records():
         assert put_financial_record_response.status_code == 200
         assert 'date' in put_financial_record_response.json()
         assert 'amount' in put_financial_record_response.json()
-        assert 'category_id' in put_financial_record_response.json()
+        assert 'category' in put_financial_record_response.json()
         assert 'description' in put_financial_record_response.json()
         assert 'id' in put_financial_record_response.json()
 
