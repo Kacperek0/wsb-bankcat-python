@@ -1,6 +1,8 @@
 import pydantic
 import datetime
 
+from db.schemas.category_schema import Category
+
 """
     id = sql.Column(sql.Integer, primary_key=True, index=True)
     user_id = sql.Column(sql.Integer, sql.ForeignKey('users.id'))
@@ -37,7 +39,13 @@ class FinancialRecordMassCategoryAssignment(pydantic.BaseModel):
 
 class FinancialRecord(_FinancialRecordBase):
     id: int
-    category_id: int | None
+    category: Category | None
+
+    class Config:
+        orm_mode = True
+
+class FinancialRecordDelete(pydantic.BaseModel):
+    id: int
 
     class Config:
         orm_mode = True

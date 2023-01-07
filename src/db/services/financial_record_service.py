@@ -150,22 +150,57 @@ async def get_financial_records(
     """
     Get all financial records
     """
+    financial_records = []
+
     if query:
-        results = db.query(financial_record_model.FinancialRecord).filter(
+        results = db.query(
+            financial_record_model.FinancialRecord
+            ).join(
+                category_model.Category,
+                financial_record_model.FinancialRecord.category_id == category_model.Category.id
+            ).filter(
             financial_record_model.FinancialRecord.user_id == user.id,
             financial_record_model.FinancialRecord.description.like(f'%{query}%'),
             financial_record_model.FinancialRecord.date >= start_date,
             financial_record_model.FinancialRecord.date < (start_date + relativedelta(months=+1)),
         ).order_by(financial_record_model.FinancialRecord.date.desc()).offset(skip).limit(limit).all()
-
     else:
-        results = db.query(financial_record_model.FinancialRecord).filter(
+        results = db.query(
+            financial_record_model.FinancialRecord,
+            category_model.Category,
+            ).join(
+                category_model.Category,
+                financial_record_model.FinancialRecord.category_id == category_model.Category.id
+            ).filter(
             financial_record_model.FinancialRecord.user_id == user.id,
             financial_record_model.FinancialRecord.date >= start_date,
             financial_record_model.FinancialRecord.date < (start_date + relativedelta(months=+1)),
         ).order_by(financial_record_model.FinancialRecord.date.desc()).offset(skip).limit(limit).all()
 
-    return results
+    for result in results:
+        try:
+            financial_record = result[0]
+            category = result[1]
+
+            financial_records.append({
+                'id': financial_record.id,
+                'date': financial_record.date,
+                'description': financial_record.description,
+                'amount': financial_record.amount,
+                'category': category
+            })
+        except TypeError:
+            financial_record = result
+
+            financial_records.append({
+                'id': financial_record.id,
+                'date': financial_record.date,
+                'description': financial_record.description,
+                'amount': financial_record.amount,
+                'category': None
+            })
+
+    return financial_records
 
 
 async def get_financial_records_by_category(
