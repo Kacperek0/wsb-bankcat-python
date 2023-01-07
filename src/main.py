@@ -20,6 +20,7 @@ import jwt as _jwt
 import fastapi as _fastapi
 import fastapi.security as _security
 from fastapi import UploadFile
+from fastapi import Query
 import sqlalchemy.orm as _orm
 import datetime
 

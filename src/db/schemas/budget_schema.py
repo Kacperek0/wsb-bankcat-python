@@ -1,4 +1,5 @@
 import pydantic
+from fastapi import Query
 
 """
     id = sql.Column(sql.Integer, primary_key=True, index=True)
@@ -13,13 +14,13 @@ class _BudgetBase(pydantic.BaseModel):
 
 
 class BudgetCreate(_BudgetBase):
-    value: int
+    value: int = Query(..., gt=0)
     class Config:
         orm_mode = True
 
 
 class BudgetUpdate(_BudgetBase):
-    value: int
+    value: int = Query(..., gt=0)
     category_id: int
 
     class Config:
