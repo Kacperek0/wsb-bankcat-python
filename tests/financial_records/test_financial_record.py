@@ -8,7 +8,7 @@ from tests.conf_test_db import app
 test_user_email = 'test-user@example.com'
 test_user_name = 'Test'
 test_user_surname = 'User'
-test_user_password = 'test-password'
+test_user_password = 'Test-Passw0rd!'
 
 @pytest.mark.asyncio
 async def test_financial_records():
