@@ -21,6 +21,7 @@ import fastapi as _fastapi
 import fastapi.security as _security
 from fastapi import UploadFile
 from fastapi import Query
+from fastapi.middleware.cors import CORSMiddleware
 import sqlalchemy.orm as _orm
 import datetime
 
@@ -28,6 +29,22 @@ import datetime
 app = _fastapi.FastAPI()
 
 create_database.create_database()
+
+origins = [
+    'https://main.dxw8tgokegwsj.amplifyapp.com',
+    'https://app.bankcat.link',
+    'http://localhost:3000',
+    'http://localhost',
+    'https://www.bankcat.link'
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get('/')
 async def root():
