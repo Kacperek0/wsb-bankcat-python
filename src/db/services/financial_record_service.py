@@ -10,6 +10,7 @@ import re
 from PyPDF2 import PdfReader
 import pydantic
 from dateutil.relativedelta import relativedelta
+from sqlalchemy import or_
 
 
 from dotenv import load_dotenv
@@ -152,12 +153,15 @@ async def get_financial_records(
     """
     financial_records = []
 
+    categories = db.query(
+        category_model.Category
+    ).filter(
+        category_model.Category.user_id == user.id
+    ).all()
+
     if query:
         results = db.query(
             financial_record_model.FinancialRecord
-            ).join(
-                category_model.Category,
-                financial_record_model.FinancialRecord.category_id == category_model.Category.id
             ).filter(
             financial_record_model.FinancialRecord.user_id == user.id,
             financial_record_model.FinancialRecord.description.like(f'%{query}%'),
@@ -166,39 +170,34 @@ async def get_financial_records(
         ).order_by(financial_record_model.FinancialRecord.date.desc()).offset(skip).limit(limit).all()
     else:
         results = db.query(
-            financial_record_model.FinancialRecord,
-            category_model.Category,
-            ).join(
-                category_model.Category,
-                financial_record_model.FinancialRecord.category_id == category_model.Category.id
+            financial_record_model.FinancialRecord
             ).filter(
             financial_record_model.FinancialRecord.user_id == user.id,
             financial_record_model.FinancialRecord.date >= start_date,
-            financial_record_model.FinancialRecord.date < (start_date + relativedelta(months=+1)),
+            financial_record_model.FinancialRecord.date < (start_date + relativedelta(months=+1))
         ).order_by(financial_record_model.FinancialRecord.date.desc()).offset(skip).limit(limit).all()
 
     for result in results:
-        try:
-            financial_record = result[0]
-            category = result[1]
-
-            financial_records.append({
-                'id': financial_record.id,
-                'date': financial_record.date,
-                'description': financial_record.description,
-                'amount': financial_record.amount,
-                'category': category
-            })
-        except TypeError:
             financial_record = result
 
-            financial_records.append({
-                'id': financial_record.id,
-                'date': financial_record.date,
-                'description': financial_record.description,
-                'amount': financial_record.amount,
-                'category': None
-            })
+            if result.category_id:
+                for category in categories:
+                    if category.id == result.category_id:
+                        financial_records.append({
+                            'id': financial_record.id,
+                            'date': financial_record.date,
+                            'description': financial_record.description,
+                            'amount': financial_record.amount,
+                            'category': category
+                        })
+            else:
+                financial_records.append({
+                    'id': financial_record.id,
+                    'date': financial_record.date,
+                    'description': financial_record.description,
+                    'amount': financial_record.amount,
+                    'category': None
+                })
 
     return financial_records
 
@@ -407,10 +406,7 @@ async def import_mbank_csv(
             else:
                 continue
         except IndexError:
-            raise fastapi.HTTPException(
-                status_code=400,
-                detail='Invalid file format'
-            )
+            continue
 
     return results
 
