@@ -31,7 +31,10 @@ app = _fastapi.FastAPI()
 create_database.create_database()
 
 origins = [
-    'http://backend.bankcat.link'
+    'https://main.dxw8tgokegwsj.amplifyapp.com',
+    'https://app.bankcat.link',
+    'http://localhost:3000',
+    'https://www.bankcat.link'
 ]
 
 app.add_middleware(
