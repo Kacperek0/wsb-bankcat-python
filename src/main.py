@@ -34,7 +34,8 @@ origins = [
     'https://main.dxw8tgokegwsj.amplifyapp.com',
     'https://app.bankcat.link',
     'http://localhost:3000',
-    'https://www.bankcat.link'
+    'https://www.bankcat.link',
+    '*'
 ]
 
 app.add_middleware(
