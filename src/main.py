@@ -24,6 +24,7 @@ from fastapi import Query
 from fastapi.middleware.cors import CORSMiddleware
 import sqlalchemy.orm as _orm
 import datetime
+import os
 
 
 app = _fastapi.FastAPI()
@@ -212,7 +213,7 @@ async def delete_budget(
     return await budget_service.delete_budget(db, user, budget_id)
 
 
-@app.get('/api/financial-record', response_model=list[financial_record_schema.FinancialRecord], tags=['Financial Record'])
+@app.get('/api/financial-record', response_model=dict, tags=['Financial Record'])
 async def get_financial_records(
     user: user_schema.User = _fastapi.Depends(user_service.get_current_user),
     skip: int = 0,
@@ -368,4 +369,4 @@ async def get_budget_dashboard(
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app, host='0.0.0.0', port=80)
+    uvicorn.run(app, host='0.0.0.0', port=int(os.getenv("PORT", 80)))
