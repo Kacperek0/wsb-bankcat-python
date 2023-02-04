@@ -1,8 +1,11 @@
 import jwt as jwt
+import random
+import string
 import passlib.hash as hash
 import sqlalchemy.orm as orm
 import fastapi as fastapi
 import fastapi.security as security
+import datetime
 
 from dotenv import load_dotenv
 
@@ -11,7 +14,9 @@ import os
 import db.database as db
 from db.services.database_session import database_session
 from db.models import user as user_model
+from db.models import token as token_model
 from db.schemas import user_schema as user_schema
+from db.services.token_service import get_token_by_token
 
 load_dotenv()
 
@@ -45,6 +50,16 @@ async def create_user(
     db.add(user_object)
     db.commit()
     db.refresh(user_object)
+
+    token_object = token_model.Token(
+        token=''.join(random.choices(string.ascii_uppercase + string.digits, k=16)),
+        user_id=user_object.id,
+        action='register'
+    )
+    db.add(token_object)
+    db.commit()
+    db.refresh(token_object)
+
     return user_object
 
 
@@ -61,6 +76,9 @@ async def authenticate_user(
         return False
 
     if not user.verify_password(password):
+        return False
+
+    if user.verified_at is None:
         return False
 
     return user
@@ -99,3 +117,34 @@ async def get_current_user(
         )
 
     return user_schema.User.from_orm(user)
+
+
+async def verify_user(
+    db: orm.Session,
+    email: str,
+    token: str
+):
+    """
+    """
+    user = await get_user_by_email(db, email)
+    if not user:
+        return False
+
+    if user.verified_at is not None:
+        return False
+
+    token = await get_token_by_token(db, token, 'register')
+    if not token:
+        return False
+
+    if token.user_id != user.id:
+        return False
+
+    db.delete(token)
+    db.commit()
+
+    user.verified_at = datetime.datetime.now()
+    db.commit()
+    db.refresh(user)
+
+    return True
