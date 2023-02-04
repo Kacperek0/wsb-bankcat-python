@@ -1,0 +1,35 @@
+version: '3.7'
+services:
+
+  bankcat_db:
+    container_name: bankcat_py_db
+    image: postgres:14
+    volumes:
+      - bankcat_db_volume:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_MULTIPLE_DATABASES="testing"
+      - POSTGRES_DB=app
+      - POSTGRES_USER=app
+      - POSTGRES_PASSWORD=app
+      - LC_ALL=C.UTF-8
+    ports:
+      - "5432:5432"
+    networks:
+      - bankcat
+
+  bankcat_mailhog:
+    container_name: bankcat_py_mailhog
+    image: mailhog/mailhog
+    ports:
+     - "8025:8025"
+    networks:
+    - bankcat
+
+volumes:
+  bankcat_db_volume:
+    driver: local
+  bankcat_keydb_volume:
+    driver: local
+
+networks:
+  bankcat:

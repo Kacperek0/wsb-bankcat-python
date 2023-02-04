@@ -12,7 +12,6 @@ import pydantic
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import or_
 
-
 from dotenv import load_dotenv
 
 import os
@@ -45,9 +44,9 @@ JWT_SECRET = os.getenv("JWT_SECRET")
 
 
 async def get_financial_record_by_id(
-    db: orm.Session,
-    financial_record_id: str,
-    user_id: int,
+        db: orm.Session,
+        financial_record_id: str,
+        user_id: int,
 ):
     """
     Get a category by name
@@ -59,9 +58,9 @@ async def get_financial_record_by_id(
 
 
 async def check_uniqueness(
-    db: orm.Session,
-    user: user_schema.User,
-    financial_record: financial_record_schema.FinancialRecordCreate,
+        db: orm.Session,
+        user: user_schema.User,
+        financial_record: financial_record_schema.FinancialRecordCreate,
 ) -> bool:
     """
     Check if the financial record is unique
@@ -81,9 +80,9 @@ async def check_uniqueness(
 
 
 async def check_category(
-    db: orm.Session,
-    user: user_schema.User,
-    financial_record: financial_record_schema.FinancialRecordCreate,
+        db: orm.Session,
+        user: user_schema.User,
+        financial_record: financial_record_schema.FinancialRecordCreate,
 ) -> bool:
     """
     Check if the category exists
@@ -100,9 +99,9 @@ async def check_category(
 
 
 async def create_financial_record(
-    db: orm.Session,
-    user: user_schema.User,
-    financial_record: financial_record_schema.FinancialRecordCreate,
+        db: orm.Session,
+        user: user_schema.User,
+        financial_record: financial_record_schema.FinancialRecordCreate,
 ):
     """
     Create a new financial record
@@ -141,12 +140,12 @@ async def create_financial_record(
 
 
 async def get_financial_records(
-    db: orm.Session,
-    user: user_schema.User,
-    skip: int = 0,
-    limit: int = 100,
-    query: str = None,
-    start_date: datetime.date = datetime.date.today().replace(day=1),
+        db: orm.Session,
+        user: user_schema.User,
+        skip: int = 0,
+        limit: int = 100,
+        query: str = None,
+        start_date: datetime.date = datetime.date.today().replace(day=1),
 ):
     """
     Get all financial records
@@ -159,56 +158,61 @@ async def get_financial_records(
         category_model.Category.user_id == user.id
     ).all()
 
+    base = db.query(
+        financial_record_model.FinancialRecord
+    ).filter(
+        financial_record_model.FinancialRecord.user_id == user.id,
+        financial_record_model.FinancialRecord.date >= start_date,
+        financial_record_model.FinancialRecord.date < (start_date + relativedelta(months=+1))
+    )
+
     if query:
-        results = db.query(
-            financial_record_model.FinancialRecord
-            ).filter(
-            financial_record_model.FinancialRecord.user_id == user.id,
-            financial_record_model.FinancialRecord.description.like(f'%{query}%'),
-            financial_record_model.FinancialRecord.date >= start_date,
-            financial_record_model.FinancialRecord.date < (start_date + relativedelta(months=+1)),
-        ).order_by(financial_record_model.FinancialRecord.date.desc()).offset(skip).limit(limit).all()
-    else:
-        results = db.query(
-            financial_record_model.FinancialRecord
-            ).filter(
-            financial_record_model.FinancialRecord.user_id == user.id,
-            financial_record_model.FinancialRecord.date >= start_date,
-            financial_record_model.FinancialRecord.date < (start_date + relativedelta(months=+1))
-        ).order_by(financial_record_model.FinancialRecord.date.desc()).offset(skip).limit(limit).all()
+        base = base.filter(
+            financial_record_model.FinancialRecord.description.ilike(f'%{query}%'),
+        )
+
+    total = base.count()
+
+    results = base.order_by(financial_record_model.FinancialRecord.date.desc()) \
+        .offset(skip) \
+        .limit(limit) \
+        .all()
 
     for result in results:
-            financial_record = result
+        financial_record = result
 
-            if result.category_id:
-                for category in categories:
-                    if category.id == result.category_id:
-                        financial_records.append({
-                            'id': financial_record.id,
-                            'date': financial_record.date,
-                            'description': financial_record.description,
-                            'amount': financial_record.amount,
-                            'category': category
-                        })
-            else:
-                financial_records.append({
-                    'id': financial_record.id,
-                    'date': financial_record.date,
-                    'description': financial_record.description,
-                    'amount': financial_record.amount,
-                    'category': None
-                })
+        if result.category_id:
+            for category in categories:
+                if category.id == result.category_id:
+                    financial_records.append({
+                        'id': financial_record.id,
+                        'date': financial_record.date,
+                        'description': financial_record.description,
+                        'amount': financial_record.amount,
+                        'category': category
+                    })
+        else:
+            financial_records.append({
+                'id': financial_record.id,
+                'date': financial_record.date,
+                'description': financial_record.description,
+                'amount': financial_record.amount,
+                'category': None
+            })
 
-    return financial_records
+    return {
+        "records": financial_records,
+        "total": total
+    }
 
 
 async def get_financial_records_by_category(
-    db: orm.Session,
-    user: user_schema.User,
-    category_id: int,
-    skip: int = 0,
-    limit: int = 100,
-    start_date: datetime.date = datetime.date.today().replace(day=1)
+        db: orm.Session,
+        user: user_schema.User,
+        category_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        start_date: datetime.date = datetime.date.today().replace(day=1)
 ):
     """
     Get all financial records by category
@@ -229,9 +233,9 @@ async def get_financial_records_by_category(
 
 
 async def assign_financial_records(
-    db: orm.Session,
-    user: user_schema.User,
-    financial_records: financial_record_schema.FinancialRecordMassCategoryAssignment
+        db: orm.Session,
+        user: user_schema.User,
+        financial_records: financial_record_schema.FinancialRecordMassCategoryAssignment
 ):
     """
     Assign financial records to a category
@@ -259,12 +263,11 @@ async def assign_financial_records(
     return updated_records
 
 
-
 async def put_financial_record(
-    db: orm.Session,
-    user: user_schema.User,
-    financial_record_id: str,
-    financial_record: financial_record_schema.FinancialRecordUpdate,
+        db: orm.Session,
+        user: user_schema.User,
+        financial_record_id: str,
+        financial_record: financial_record_schema.FinancialRecordUpdate,
 ):
     """
     Update a financial record
@@ -294,9 +297,9 @@ async def put_financial_record(
 
 
 async def delete_financial_record(
-    db: orm.Session,
-    user: user_schema.User,
-    financial_record_id: str,
+        db: orm.Session,
+        user: user_schema.User,
+        financial_record_id: str,
 ):
     """
     Delete a financial record
@@ -321,9 +324,9 @@ async def delete_financial_record(
 
 
 async def import_mbank_csv(
-    db: orm.Session,
-    user: user_schema.User,
-    csv_file: UploadFile = File(...),
+        db: orm.Session,
+        user: user_schema.User,
+        csv_file: UploadFile = File(...),
 ):
     """
     Import a csv file
@@ -387,7 +390,8 @@ async def import_mbank_csv(
                 if check_category:
                     category_id = check_category.id
                 else:
-                    category_id = await category_service.create_category(db, user, category_schema.CategoryCreate(name=category))
+                    category_id = await category_service.create_category(db, user,
+                                                                         category_schema.CategoryCreate(name=category))
                     category_id = category_id.id
 
                 financial_record = financial_record_schema.FinancialRecordCreate(
@@ -412,9 +416,9 @@ async def import_mbank_csv(
 
 
 async def import_pkobp_pdf(
-    db: orm.Session,
-    user: user_schema.User,
-    pdf_file: UploadFile = File(...),
+        db: orm.Session,
+        user: user_schema.User,
+        pdf_file: UploadFile = File(...),
 ):
     """
     Import a pdf file
@@ -431,7 +435,6 @@ async def import_pkobp_pdf(
         if is_usable:
             usable_data.append(line)
 
-
     process_data = []
     for line in usable_data:
         if re.match(r'[0-9]{2}\.[0-9]{2}\.[0-9]{4}', line):
@@ -440,7 +443,7 @@ async def import_pkobp_pdf(
     # Loop through data, group every 2 lines and create a list of tuples
     results = []
     for i in range(0, len(process_data), 2):
-        results.append((process_data[i], process_data[i+1]))
+        results.append((process_data[i], process_data[i + 1]))
 
     financial_records = []
     # Loop through tuples and split them into date, description and amount
@@ -479,9 +482,9 @@ async def import_pkobp_pdf(
 
 
 async def import_santander_csv(
-    db: orm.Session,
-    user: user_schema.User,
-    csv_file: UploadFile = File(...),
+        db: orm.Session,
+        user: user_schema.User,
+        csv_file: UploadFile = File(...),
 ):
     csv_file_content = await csv_file.read()
 
@@ -522,9 +525,9 @@ async def import_santander_csv(
 
 
 async def import_pekaosa_csv(
-    db: orm.Session,
-    user: user_schema.User,
-    csv_file: UploadFile = File(...),
+        db: orm.Session,
+        user: user_schema.User,
+        csv_file: UploadFile = File(...),
 ):
     csv_file_content = await csv_file.read()
 
@@ -566,9 +569,9 @@ async def import_pekaosa_csv(
 
 
 async def import_grupabps_csv(
-    db: orm.Session,
-    user: user_schema.User,
-    csv_file: UploadFile = File(...),
+        db: orm.Session,
+        user: user_schema.User,
+        csv_file: UploadFile = File(...),
 ):
     csv_file_content = await csv_file.read()
 
@@ -606,9 +609,9 @@ async def import_grupabps_csv(
 
 
 async def import_millenium_pdf(
-    db: orm.Session,
-    user: user_schema.User,
-    pdf_file: UploadFile = File(...),
+        db: orm.Session,
+        user: user_schema.User,
+        pdf_file: UploadFile = File(...),
 ):
     reader = PdfReader(pdf_file.file)
     pages = len(reader.pages)
@@ -632,7 +635,7 @@ async def import_millenium_pdf(
     split_data = []
     for iter, item in enumerate(parsed_text):
         if item.startswith('20'):
-            split_data.append(parsed_text[iter:iter+3])
+            split_data.append(parsed_text[iter:iter + 3])
 
     financial_records = []
     for record in split_data:
