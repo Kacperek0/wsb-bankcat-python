@@ -19,7 +19,7 @@ class User(Base):
     surname = sql.Column(sql.String, index=True)
     email = sql.Column(sql.String, unique=True, index=True)
     hashed_password = sql.Column(sql.String)
-    is_active = sql.Column(sql.Boolean, default=False)
+    verified_at = sql.Column(sql.DateTime, default=None)
 
     def verify_password(self, password):
         return hash.bcrypt.verify(password, self.hashed_password)
