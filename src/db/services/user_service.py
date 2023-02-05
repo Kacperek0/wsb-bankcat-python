@@ -57,8 +57,8 @@ async def create_user(
     url = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
     await send_email_async(
-        'Hello World',
-        'someemail@gmail.com',
+        'Welcome to Bankcat!',
+        user_object.email,
         {
             'title': 'Bankcat - activation',
             'url': f"{url}/auth/activation/{user_object.email}/{token.token}"
