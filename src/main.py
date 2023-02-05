@@ -107,6 +107,21 @@ async def get_user(
 ):
     return user
 
+@app.get('/api/users/verify/{email}/{token}', tags=['User'])
+async def verify_user(
+    email: str,
+    token: str,
+    db: _orm.Session = _fastapi.Depends(database_session.database_session),
+):
+    if not await user_service.verify_user(db, email, token):
+        raise _fastapi.HTTPException(
+            status_code=403,
+            detail='Invalid'
+        )
+
+
+    return {'Status': 'OK'}
+
 
 @app.post('/api/users/verify', tags=['User'])
 async def verify_user(
