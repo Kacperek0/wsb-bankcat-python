@@ -8,6 +8,9 @@ from dotenv import load_dotenv
 
 import os
 
+import random
+import string
+
 import db.database as db
 from db.services.database_session import database_session
 from db.models import user as user_model
@@ -36,3 +39,18 @@ async def get_token_by_token(
         token_model.Token.action == action
     ).first()
 
+async def create_new_token(
+    db: orm.Session,
+    user_id: int,
+    action: str
+):
+    model = token_model.Token(
+        user_id=user_id,
+        token=''.join(random.choices(string.ascii_uppercase + string.digits, k=16)),
+        action=action
+    )
+    db.add(model)
+    db.commit()
+    db.refresh(model)
+
+    return model

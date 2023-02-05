@@ -16,17 +16,18 @@ from db.services.database_session import database_session
 from db.models import user as user_model
 from db.models import token as token_model
 from db.schemas import user_schema as user_schema
-from db.services.token_service import get_token_by_token
-
+from db.services.token_service import get_token_by_token, create_new_token
+from db.services.send_email import send_email_async
 load_dotenv()
 
 oauth2_schema = security.OAuth2PasswordBearer(tokenUrl='/api/login')
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 
+
 async def get_user_by_email(
-    db: orm.Session,
-    email: str
+        db: orm.Session,
+        email: str
 ):
     """
     Get a user by email
@@ -35,8 +36,8 @@ async def get_user_by_email(
 
 
 async def create_user(
-    db: orm.Session,
-    user: user_schema.UserCreate
+        db: orm.Session,
+        user: user_schema.UserCreate
 ):
     """
     Create a user
@@ -51,22 +52,27 @@ async def create_user(
     db.commit()
     db.refresh(user_object)
 
-    token_object = token_model.Token(
-        token=''.join(random.choices(string.ascii_uppercase + string.digits, k=16)),
-        user_id=user_object.id,
-        action='register'
+    token = await create_new_token(db, user_object.id, 'register')
+
+    url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
+    await send_email_async(
+        'Hello World',
+        'someemail@gmail.com',
+        {
+            'title': 'Bankcat - activation',
+            'url': f"{url}/auth/activation/{user_object.email}/{token.token}"
+        },
+        'activation.html'
     )
-    db.add(token_object)
-    db.commit()
-    db.refresh(token_object)
 
     return user_object
 
 
 async def authenticate_user(
-    db: orm.Session,
-    email: str,
-    password: str
+        db: orm.Session,
+        email: str,
+        password: str
 ):
     """
     Authenticate a user
@@ -85,7 +91,7 @@ async def authenticate_user(
 
 
 async def create_token(
-    user: user_model.User,
+        user: user_model.User,
 ):
     """
     Create a token
@@ -101,8 +107,8 @@ async def create_token(
 
 
 async def get_current_user(
-    db: orm.Session = fastapi.Depends(database_session),
-    token: str = fastapi.Depends(oauth2_schema)
+        db: orm.Session = fastapi.Depends(database_session),
+        token: str = fastapi.Depends(oauth2_schema)
 ):
     """
     Get current user
@@ -120,9 +126,9 @@ async def get_current_user(
 
 
 async def verify_user(
-    db: orm.Session,
-    email: str,
-    token: str
+        db: orm.Session,
+        email: str,
+        token: str
 ):
     """
     """

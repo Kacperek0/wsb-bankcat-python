@@ -5,7 +5,7 @@ services:
     container_name: bankcat_py_db
     image: postgres:14
     volumes:
-      - bankcat_db_volume:/var/lib/postgresql/data
+      - bankcat_db_volume_new:/var/lib/postgresql/data
     environment:
       - POSTGRES_MULTIPLE_DATABASES="testing"
       - POSTGRES_DB=app
@@ -22,13 +22,12 @@ services:
     image: mailhog/mailhog
     ports:
      - "8025:8025"
+     - "1025:1025"
     networks:
     - bankcat
 
 volumes:
-  bankcat_db_volume:
-    driver: local
-  bankcat_keydb_volume:
+  bankcat_db_volume_new:
     driver: local
 
 networks:

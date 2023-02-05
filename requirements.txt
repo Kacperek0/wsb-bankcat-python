@@ -36,3 +36,4 @@ tomli==2.0.1
 typing_extensions==4.4.0
 uuid==1.30
 uvicorn==0.20.0
+fastapi-mail==1.2.5

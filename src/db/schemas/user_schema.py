@@ -20,3 +20,12 @@ class User(_UserBase):
 
     class Config:
         orm_mode = True
+
+
+class _UserActivationBase(pydantic.BaseModel):
+    email: pydantic.EmailStr
+    token: str = Query(..., min_length=8, max_length=32)
+
+class UserActivation(_UserActivationBase):
+    class Config:
+        orm_mode = False
