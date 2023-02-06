@@ -57,7 +57,7 @@ async def create_user(
     url = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
     await send_email_async(
-        'Welcome to Bankcat!',
+        'Welcome to Bankcat',
         user_object.email,
         {
             'title': 'Welcome to Bankcat!',
