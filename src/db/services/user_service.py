@@ -60,7 +60,7 @@ async def create_user(
         'Welcome to Bankcat!',
         user_object.email,
         {
-            'title': 'Bankcat - activation',
+            'title': 'Welcome to Bankcat!',
             'url': f"{url}/auth/activation/{user_object.email}/{token.token}"
         },
         'activation.html'
