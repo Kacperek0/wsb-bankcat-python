@@ -18,6 +18,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get upgrade --fix-missing
+          sudo apt-get remove containerd runc -y
           sudo apt-get install -y docker.io
 
       - name: Start Postgres Container
