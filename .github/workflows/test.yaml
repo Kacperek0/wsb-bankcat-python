@@ -47,11 +47,12 @@ jobs:
 
       - name: Run tests with pytest
         run: |
-          export TEST_POSTGRES_USER="postgres"
-          export TEST_POSTGRES_PASSWORD="mysecretpassword"
-          export TEST_POSTGRES_SERVER="postgres"
-          export TEST_POSTGRES_PORT="5432"
-          export TEST_DATABASE_NAME="postgres"
           pip install -r requirements.txt
           pytest
+        env:
+          TEST_POSTGRES_USER: postgres
+          TEST_POSTGRES_PASSWORD: mysecretpassword
+          TEST_POSTGRES_SERVER: postgres
+          TEST_POSTGRES_PORT: 5432
+          TEST_DATABASE_NAME: postgres
 
