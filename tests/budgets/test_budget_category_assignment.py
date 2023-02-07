@@ -4,6 +4,9 @@ import pdb as pdb
 from httpx import AsyncClient
 
 from tests.conf_test_db import app
+from tests.conf_test_db import override_database_session
+
+from src.db.services.user_service import get_user_by_email, create_new_token, verify_user
 
 test_user_email = 'test-user@example.com'
 test_user_name = 'Test'
@@ -19,6 +22,12 @@ async def test_categories():
             'surname': test_user_surname,
             'hashed_password': test_user_password,
         })
+
+        db_session = next(override_database_session())
+        # Activate user
+        user = await get_user_by_email(db_session, test_user_email)
+        token = await create_new_token(db_session, user.id, 'register')
+        await verify_user(db_session, user.email, token.token)
 
         login_response = await ac.post('/api/login', data={
             'username': test_user_email,

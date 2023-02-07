@@ -7,6 +7,7 @@ from db.models.user import User
 from db.models.category import Category
 from db.models.budget import Budget
 from db.models.financial_record import FinancialRecord
+from db.models.token import Token
 
 
 @pytest.fixture(autouse=True)
@@ -18,6 +19,7 @@ def create_dummy_user():
     database.query(FinancialRecord).delete()
     database.query(Budget).delete()
     database.query(Category).delete()
+    database.query(Token).delete()
     database.query(User).delete()
     # user = database.query(User).filter(User.email == 'test-user@example.com').first()
     # if user:
