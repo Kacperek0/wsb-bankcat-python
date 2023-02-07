@@ -33,7 +33,7 @@ jobs:
           echo 'TEST_POSTGRES_USER="postgres"' >> .env
           echo 'TEST_POSTGRES_PASSWORD="mysecretpassword"' >> .env
           echo 'TEST_POSTGRES_SERVER="postgres"' >> .env
-          echo 'TEST_POSTGRES_PORT="${{ secrets.TEST_POSTGRES_PORT }}"' >> .env
+          echo 'TEST_POSTGRES_PORT="5432"' >> .env
           echo 'TEST_DATABASE_NAME="postgres"' >> .env
           echo 'JWT_SECRET="${{ secrets.JWT_SECRET }}"' >> .env
           echo 'PORT="${{ secrets.PORT }}"' >> .env
