@@ -9,21 +9,23 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     environment: production
+    
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: mysecretpassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get upgrade --fix-missing
-          sudo apt-get remove containerd runc -y
-          sudo apt-get install -y docker.io
-
-      - name: Start Postgres Container
-        run: |
-          sudo docker run --name postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres -p 5432:5432
 
       - name: Create .env file
         id: create-dotenv
