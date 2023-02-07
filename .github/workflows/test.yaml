@@ -21,7 +21,7 @@ jobs:
 
       - name: Start Postgres Container
         run: |
-          sudo docker run --name postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres
+          sudo docker run --name postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres -p 5432:5432
 
       - name: Create .env file
         id: create-dotenv
